@@ -1,0 +1,163 @@
+.account-container {
+  max-width: 440px;
+  margin: 42px auto 0 auto;
+  padding: 36px 28px 30px 28px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 6px 44px 0 #c7229017, 0 1.5px 7px 0 #ee46c524;
+  backdrop-filter: blur(11px);
+  border: 1.5px solid #fad4f3;
+
+  h2 {
+    color: #c72290;
+    font-weight: 800;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    text-align: left;
+    letter-spacing: -0.5px;
+  }
+
+  h3 {
+    color: #212121;
+    margin-top: 28px;
+    margin-bottom: 13px;
+    font-weight: 700;
+    font-size: 1.18rem;
+  }
+
+  .account-details,
+  .deposit-section {
+    margin-bottom: 30px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #f2d5ec;
+
+    &:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  p, label, strong {
+    color: #343345;
+    font-size: 1.06rem;
+  }
+
+  p {
+    margin-bottom: 11px;
+  }
+
+  .form-group {
+    margin-bottom: 19px;
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 700;
+      color: #c72290;
+    }
+
+    input[type="number"].form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.3px solid #e5b6d6;
+      border-radius: 8px;
+      background: #faf6fa;
+      font-size: 1.1rem;
+      margin-bottom: 3px;
+      transition: border-color 0.18s;
+    }
+    input[type="number"].form-control:focus {
+      outline: none;
+      border-color: #c72290;
+      background: #fff2fa;
+    }
+
+    .text-danger {
+      font-size: 0.93em;
+      color: #e0287d;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+  }
+
+  .btn-primary {
+    background: linear-gradient(90deg, #c72290 20%, #ee46c5 100%);
+    color: white;
+    padding: 11px 23px;
+    border: none;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 1.09rem;
+    cursor: pointer;
+    box-shadow: 0 2px 12px 0 #c7229035;
+    transition: background 0.19s, box-shadow 0.18s, color 0.17s;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(90deg, #ee46c5 0%, #c72290 80%);
+      color: #fff;
+      box-shadow: 0 4px 28px 0 #ee46c570;
+    }
+
+    &:disabled {
+      background: #efeaf2;
+      color: #bdbdbd;
+      cursor: not-allowed;
+    }
+  }
+
+  .alert {
+    padding: 10px 15px;
+    margin-bottom: 13px;
+    border-radius: 7px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.04rem;
+  }
+
+  .alert-danger {
+    background-color: #fff0f4;
+    color: #e0287d;
+    border: 1.2px solid #ee46c5;
+  }
+
+  .alert-success {
+    background-color: #f0fff5;
+    color: #2d8659;
+    border: 1.2px solid #72e5b6;
+  }
+
+  .alert-warning {
+    background-color: #fffbe8;
+    color: #b08212;
+    border: 1.2px solid #f8e7b1;
+  }
+
+  .loading-spinner {
+    text-align: center;
+    padding: 23px;
+    font-style: italic;
+    color: #c72290;
+  }
+
+  .account-details strong,
+  .deposit-section strong {
+    color: #c72290;
+    font-weight: 700;
+  }
+
+  // Button für Kontostand nachladen im Error
+  .account-details button, .account-details .btn-primary {
+    margin-top: 7px;
+    margin-bottom: 0;
+  }
+}
+
+/* Mobile Optimierung */
+@media (max-width: 600px) {
+  .account-container {
+    max-width: 97vw;
+    padding: 18px 3vw;
+    h2 { font-size: 1.3rem; }
+  }
+}

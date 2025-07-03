@@ -1,0 +1,76 @@
+<!-- src/app/app.component.html -->
+<div class="app-container">
+  <header class="app-header">
+    <!-- LINKS: Hamburger fürs Side-Menu -->
+    <div class="header-left">
+      <button
+  class="back-btn"
+  (click)="goHome()"
+  aria-label="Zurück zur Startseite">
+  <svg width="28" height="28" viewBox="0 0 28 28" style="vertical-align: middle;">
+    <polyline points="18,6 10,14 18,22" fill="none" stroke="#c72290" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+      <div *ngIf="!authService.isLoggedIn()" class="header-placeholder"></div>
+    </div>
+
+    <!-- MITTE: Logo als Link zur Startseite -->
+    <div class="header-center">
+      <a routerLink="/home" aria-label="Zur Startseite">
+        <img
+          src="assets/logo.png"
+          alt="SEP-Drive Logo"
+          class="app-logo">
+      </a>
+    </div>
+
+
+
+    <!-- RECHTS: Nur das Profilbild (Kreis), klickbar auf /profile -->
+    <div class="header-right">
+      <ng-container *ngIf="authService.isLoggedIn(); else anon">
+        <a routerLink="/profile" aria-label="Mein Profil">
+          <img [src]="getProfileImageUrl()" alt="Profilbild" class="profile-img">
+        </a>
+      </ng-container>
+      <ng-template #anon>
+        <div class="header-placeholder"></div>
+      </ng-template>
+    </div>
+  </header>
+
+  <!-- Side-Menu -->
+  <nav class="side-menu" [class.open]="isMenuOpen" *ngIf="authService.isLoggedIn()">
+    <button
+      class="close-menu-button"
+      aria-label="Menü schließen"
+      (click)="toggleMenu()">
+      ✕
+    </button>
+    <ul>
+      <li><a routerLink="/home" (click)="toggleMenu()">Home</a></li>
+      <li><a routerLink="/profile" (click)="toggleMenu()">Mein Profil</a></li>
+      <li><a routerLink="/users/search" (click)="toggleMenu()">Benutzer suchen</a></li>
+      <li><a routerLink="/request-ride" (click)="toggleMenu()">Fahrt anfragen</a></li>
+      <li><a routerLink="/active-request" (click)="toggleMenu()">Aktive Anfrage</a></li>
+      <hr>
+      <li><a routerLink="/impressum" (click)="toggleMenu()">Impressum</a></li>
+      <li><a routerLink="/kontakt" (click)="toggleMenu()">Kontakt</a></li>
+      <li><a routerLink="/faq" (click)="toggleMenu()">FAQs</a></li>
+      <hr>
+      <li><a href="#" (click)="logout(); false">Logout</a></li>
+    </ul>
+  </nav>
+  <div class="overlay" *ngIf="isMenuOpen" (click)="toggleMenu()"></div>
+
+  <main class="app-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="app-footer">
+    <p>&copy; {{ currentYear }} SEP-Drive</p>
+  </footer>
+</div>
+
+

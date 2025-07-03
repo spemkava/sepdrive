@@ -1,0 +1,59 @@
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  min-height: calc(100vh - 100px); // Annahme: 100px für Header/Footer Höhe
+
+  mat-card {
+    width: 100%;
+    max-width: 500px; // Begrenzt die maximale Breite der Karte
+    padding: 20px; // Innenabstand der Karte
+
+    mat-card-header {
+      margin-bottom: 20px; // Abstand unter dem Titel
+      // Zentrierung des Titels, falls gewünscht
+      display: flex;
+      justify-content: center;
+    }
+
+    .form-row {
+      margin-bottom: 15px; // Abstand zwischen den Formularzeilen
+
+      mat-form-field {
+        width: 100%; // Formularfelder nehmen die volle Breite der Zeile ein
+      }
+    }
+
+    .profile-image-upload {
+      margin: 0px 0; // Etwas mehr vertikaler Abstand
+      display: flex;
+      flex-direction: column; // Elemente untereinander
+      align-items: flex-start; // Button und Dateiname linksbündig
+
+      button {
+        margin-bottom: 8px; // Kleiner Abstand zwischen Button und Dateiname
+      }
+      span {
+        font-size: 0.9em;
+        color: #555;
+      }
+    }
+
+    .register-buttons {
+      display: flex;
+      justify-content: space-between; // Knöpfe an den entgegengesetzten Enden
+      align-items: center;
+      margin-top: 25px; // Abstand über den Knöpfen
+
+      button {
+        padding: 0 20px; // Etwas mehr Padding für die Buttons
+      }
+    }
+  }
+}
+
+// Hilfsklasse für Fehlertext, falls benötigt für spezifisches Styling
+mat-error {
+  font-size: 0.85em;
+}

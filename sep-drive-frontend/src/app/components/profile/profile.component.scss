@@ -1,0 +1,56 @@
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  .profile-pic {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+  }
+  .upload-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    .error {
+      color: red;
+      font-size: 0.9em;
+    }
+  }
+}
+.error {
+  color: red;
+  margin-top: 1rem;
+}
+.upload-btn {
+  display: inline-block;
+  padding: 0.5em 1em;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  user-select: none;
+
+  &:hover { background-color: #0056b3; }
+}
+
+.remove-btn {
+  display: inline-block;
+  padding: 0.5em 1em;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  user-select: none;
+
+  &:hover { background-color: #a71d2a; }
+}
+
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

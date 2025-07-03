@@ -1,0 +1,38 @@
+<div *ngIf="activeRequest$ | async as request; else loading">
+    <pre> {{ request | json}}</pre> <!-- Json Rohansicht zum debuggen -->
+    <h2>Fahrtübersicht (ID: {{ request.id }})</h2>
+
+    
+    <p><strong>Start:</strong> {{ request.startAddress || (request.startLatitude + ', ' + request.startLongitude) }}</p>
+    <p><strong>Ziel:</strong> {{ request.destinationAddress || (request.destinationLatitude + ', ' + request.destinationLongitude) }}</p>
+
+    <!-- Entfernung und Preis eventuell über Properties im DTO oder berechnet -->
+    <p><strong>Status:</strong> {{ request.status }}</p>
+
+    <!-- Hier kannst du weitere Werte wie Fahrzeugklasse, Erstellzeit etc. anzeigen -->
+    <p><strong>Fahrzeugklasse:</strong> {{ request.requestedCarClass }}</p>
+    <p><strong>Erstellt am:</strong> {{ request.createdAt | date:'short' }}</p>
+
+    <!-- Buttons für Abschluss, Bewertung, Bezahlung etc. -->
+    <button (click)="requestPayment()">Fahrpreis bestätigen & bezahlen</button>
+
+    <!-- Bewertungsformular -->
+    <div *ngIf="!ratingSubmitted">
+        <h3>Bewertung abgeben</h3>
+        <label>
+            Sterne (1-5):
+            <select [(ngModel)]="rating">
+                <option *ngFor="let s of [1,2,3,4,5]" [value]="s">{{ s }}</option>
+            </select>
+        </label>
+        <button (click)="submitRating()" [disabled]="rating===null">Bewertung abschicken</button>
+    </div>
+
+    <div *ngIf="ratingSubmitted">
+        <p>Vielen Dank für deine Bewertung!</p>
+    </div>
+</div>
+
+<ng-template #loading>
+    <p>Lade Fahrtdaten...</p>
+</ng-template>

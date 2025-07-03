@@ -1,0 +1,59 @@
+version: '3.8' # Diese Zeile kann drin bleiben oder entfernt werden, neuere Versionen brauchen sie nicht zwingend
+
+services:
+  # Backend Service (Java/Spring Boot)
+  backend:
+    build: ./sep-drive-backend # Pfad zum Backend-Projekt
+    ports:
+      - "8080:8080" # Mappt Host-Port 8080 auf Container-Port 8080
+    environment:
+      # Umgebungsvariablen für Spring Boot (ersetzen Werte aus application.properties)
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/sepdb
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password # Später sicherer machen (z.B. Docker Secrets)
+      - APP_SECURITY_SUPER_2FA_CODE=000000 # Beispiel Super-Code (hole Wert aus application.properties)
+      # - file.upload-dir=./uploads/profile-pics # Normalerweise nicht hier, wird aus application.properties gelesen
+      # Ggf. JWT-Secret und Mail-Credentials hier übergeben (sicherer als in application.properties)
+    depends_on:
+      - db # Startet erst nach der Datenbank
+    networks:
+      - sep-drive-net
+    volumes: # <-- WICHTIGER ABSCHNITT FÜR UPLOADS
+      # Mappt das benannte Volume 'backend-uploads' auf den Pfad /app/uploads im Container.
+      # /app ist das Arbeitsverzeichnis im Container (WORKDIR in Dockerfile).
+      # Der FileStorageService speichert relativ dazu in uploads/profile-pics.
+      - backend-uploads:/app/uploads
+
+  # Frontend Service (Angular + Nginx)
+  frontend:
+    build: ./sep-drive-frontend # Pfad zum Frontend-Projekt
+    ports:
+      - "4200:80" # Mappt Host-Port 4200 auf Container-Port 80 (Nginx)
+    depends_on:
+      - backend
+    networks:
+      - sep-drive-net
+
+  # Datenbank Service (PostgreSQL)
+  db:
+    image: postgres:15 # Offizielles PostgreSQL Image
+    environment:
+      # Konfiguration für die PostgreSQL Datenbank
+      POSTGRES_DB: sepdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password # Später sicherer machen
+    volumes:
+      # Speichert die Datenbankdaten persistent im benannten Volume 'postgres_data'
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sep-drive-net
+
+
+# Definition der benannten Volumes
+volumes:
+  postgres_data:    # Für die Datenbank (war schon da)
+  backend-uploads:  # <-- NEU: Für die hochgeladenen Dateien
+
+# Definition des gemeinsamen Netzwerks
+networks:
+  sep-drive-net:

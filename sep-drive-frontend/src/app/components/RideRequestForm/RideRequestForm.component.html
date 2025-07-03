@@ -1,0 +1,181 @@
+<h2>Fahranfrage erstellen</h2>
+
+<div class="request-container">
+  <div class="form-section">
+    <form #requestForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+
+        <div>
+          <p>Startort</p>
+
+          <input [(ngModel)]="startMode"
+                 type="radio" id="StartCoordinates" name="startMode" value="Coordinates" checked/>
+          <label for="StartCoordinates">Koordinaten</label>
+          <input [(ngModel)]="startMode"
+                 type="radio" id="StartAddressRadio" name="startMode" value="Address"/>
+          <label for="StartAddressRadio">Adresse</label>
+          <input [(ngModel)]="startMode"
+                 type="radio" id="StartPOIRadio" name="startMode" value="POI"/>
+          <label for="StartPOIRadio">Sehenswürdigkeiten</label>
+          <input [(ngModel)]="startMode"
+                 type="radio" id="StartGeolocationRadio" name="startMode" value="Geolocation"/>
+          <label for="StartGeolocationRadio">Aktueller standort</label>
+          <br><br>
+
+          <!-- Koordinaten Input -->
+          <div *ngIf="startMode == 'Coordinates'">
+          <input #startLatitude="ngModel" [(ngModel)]="ride.startLatitude"
+                 class="form-control"
+                 id="startLatitude"
+                 name="startLatitude"
+                 placeholder="Breitengrad"
+                 required type="number">
+          <input #startLongitude="ngModel" [(ngModel)]="ride.startLongitude"
+                 class="form-control"
+                 id="startLongitude"
+                 name="startLongitude"
+                 placeholder="Längengrad"
+                 required type="number">
+          </div>
+          <!-- Adressen Input -->
+          <div *ngIf="startMode == 'Address'">
+            <input #startAdress="ngModel" [(ngModel)]="StartAdressSearchQuery"
+                   class="form-control"
+                   id="startAddress"
+                   name="startAddress"
+                   placeholder="Adresse"
+                   required type="string"
+                   (keyup.enter)="searchStartAddress()"/>
+            <button type="button" (click)="searchStartAddress()">🔎 Suchen</button>
+            <ul *ngIf="StartAdressSearchResults.length" class="search-results">
+              <li *ngFor="let res of StartAdressSearchResults">
+                {{ res.label }} <button type="button" (click)="chooseStartAddress(res)">Startpunkt setzen</button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- POI Input -->
+          <div *ngIf="startMode == 'POI'">
+            <label for="startPoiSelect">Wähle Sehenswürdigkeit (Start):</label>
+            <input type="text" [(ngModel)]="poiSearchStart" placeholder="Suchen...">
+            <select [(ngModel)]="startPoiId" name="startPoiSelect" id="startPoiSelect" (change)="chooseStartPOI()">
+              <option *ngFor="let poi of loadedPOIs | poiFilter: poiSearchStart; trackBy: trackByPoiId" [value]="poi.id">
+                {{ poi.tags?.name || 'Unbenannter Ort' }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Geolocation -->
+          <div *ngIf="startMode == 'Geolocation'">
+            <div class="map-controls">
+              <button type="button" (click)="startGeolocation()">📍 Aktuelle Position Verwenden</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p>Zielort</p>
+
+          <input [(ngModel)]="destinationMode"
+                 type="radio" id="DestinationCoordinatesRadio" name="destinationMode" value="Coordinates" checked/>
+          <label for="DestinationCoordinatesRadio">Koordinaten</label>
+          <input [(ngModel)]="destinationMode"
+                 type="radio" id="DestinationAddressRadio" name="destinationMode" value="Address"/>
+          <label for="DestinationAddressRadio">Adresse</label>
+          <input [(ngModel)]="destinationMode"
+                 type="radio" id="DestinationPOIRadio" name="destinationMode" value="POI"/>
+          <label for="DestinationPOIRadio">Sehenswürdigkeiten</label>
+          <input [(ngModel)]="destinationMode"
+                 type="radio" id="DestinationGeolocationRadio" name="destinationMode" value="Geolocation"/>
+          <label for="DestinationGeolocationRadio">Aktueller standort</label>
+          <br><br>
+
+          <!-- Koordinaten Input -->
+          <div *ngIf="destinationMode  == 'Coordinates'">
+            <input #startLongitude="ngModel" [(ngModel)]="ride.destinationLatitude"
+                   class="form-control"
+                   id="destinationLatitude"
+                   name="destinationLatitude"
+                   placeholder="Breitengrad"
+                   required type="number">
+            <input #startLongitude="ngModel" [(ngModel)]="ride.destinationLongitude"
+                   class="form-control"
+                   id="destinationLongitude"
+                   name="destinationLongitude"
+                   placeholder="Längengrad"
+                   required type="number">
+          </div>
+          <!-- Adressen Input -->
+          <div *ngIf="destinationMode  == 'Address'">
+            <input #destinationAddress="ngModel" [(ngModel)]="DestinationAdressSearchQuery"
+              class="form-control"
+              id="destinationAddress"
+              name="destinationAddress"
+              placeholder="Adresse"
+              required type="string"
+              (keyup.enter)="searchDestinationAddress()"/>
+            <button type="button" (click)="searchDestinationAddress()">🔎 Suchen</button>
+            <ul *ngIf="DestinationAdressSearchResults.length" class="search-results">
+              <li *ngFor="let res of DestinationAdressSearchResults">
+                {{ res.label }} <button type="button" (click)="chooseDestinationAddress(res)">Zielpunkt setzen</button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- POI Input -->
+          <div *ngIf="destinationMode == 'POI'">
+            <label for="destinationPoiSelect">Wähle Sehenswürdigkeit (Ziel):</label>
+            <input type="text" [(ngModel)]="poiSearchEnd" placeholder="Suchen...">
+            <select [(ngModel)]="endPoiId" name="destinationPoiSelect" id="destinationPoiSelect" (change)="chooseEndPOI()">
+              <option *ngFor="let poi of loadedPOIs | poiFilter: poiSearchEnd; trackBy: trackByPoiId" [value]="poi.id">
+                {{ poi.tags?.name || 'Unbenannter Ort' }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Geolocation -->
+          <div *ngIf="destinationMode == 'Geolocation'">
+            <div class="map-controls">
+              <button type="button" (click)="destinationGeolocation()">📍 Aktuelle Position Verwenden</button>
+            </div>
+          </div>
+        </div>
+
+        <p>Fahrzeugklasse</p>
+        <div *ngFor="let c of carClasses">
+          <input [(ngModel)]="carClass"
+                 type="radio" [id]="c" name="carClass" [value]="c" checked/>
+          <label [for]="c">{{ c }}</label>
+        </div>
+      </div>
+      <br>
+      <fieldset *ngIf="startMode === 'POI' || destinationMode === 'POI'">
+        <legend>POI-Kategorien anzeigen:</legend>
+        <label *ngFor="let type of ['restaurant', 'museum', 'theatre']">
+          <input
+            type="checkbox"
+            [value]="type"
+            [(ngModel)]="poiSelectionMap[type]"
+            (ngModelChange)="onPOITypeToggle(type, $event)"
+          />
+          {{ type }}
+        </label>
+      </fieldset>
+      <br>
+      <button type="button" (click)="updatePreview()">Vorschau</button>
+      <button type="submit" [disabled]="!requestForm.form.valid"> Submit</button>
+
+    </form>
+  </div>
+  <h3 *ngIf="totalDistance"> Distanz: {{totalDistance}}km</h3>
+  <h3 *ngIf="totalTime"> Dauer: {{totalTime}}min</h3>
+  <h3 *ngIf="price"> vorraussichtlicher Preis: {{price}}€</h3>
+  <app-MapVisualizer
+    [startCoords$]="startCoords$"
+    [destinationCoords$]="destinationCoords$"
+    (poisChanged)="onPOIsChanged($event)"
+    (totalDistanceChanged)="totalDistanceChanged($event)"
+    (totalTimeChanged)="totalTimeChanged($event)"
+    [poiTypes]="selectedPOITypes">
+  </app-MapVisualizer>
+</div>

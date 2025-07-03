@@ -1,0 +1,96 @@
+<div class="home-glass-container">
+  <header class="glass-header">
+    <div class="logo-glass">
+      <h1><span>Willkommen {{username}}</span></h1>
+    </div>
+    <nav class="navigation-glass">
+      <a routerLink="/profile" class="nav-link-glass">Profil</a>
+      <button (click)="logout()" class="logout-btn-glass">Ausloggen</button>
+    </nav>
+  </header>
+
+  <section class="welcome-glass-section">
+    <h2>Homepage</h2>
+    <p>Was möchtest du heute tun?</p>
+  </section>
+
+  <section class="main-actions-glass main-actions-grid" [class.driver-dark]="isDriver">
+
+    <!-- Fahrt anfordern: NUR für Kunden -->
+    <div class="glass-action-card" (click)="createRideRequest()" *ngIf="!isDriver">
+      <h3>🚗 Fahrt anfordern</h3>
+      <p>Erstelle eine neue Fahrtanfrage und finde einen Fahrer.</p>
+      <a routerLink="/request-ride" class="action-link-glass">Fahrtanfrage erstellen</a>
+    </div>
+
+    <!-- Aktive Fahrtanfragen: NUR für Kunden -->
+    <div class="glass-action-card" *ngIf="!isDriver">
+      <h3>✅ Aktive Fahrtanfragen</h3>
+      <p>Sieh dir deine aktiven Fahrtanfragen an.</p>
+      <a routerLink="/active-request" class="action-link-glass">Aktive Anfragen ansehen</a>
+    </div>
+
+    <!-- Erhaltene Fahrangebote: NUR für Kunden -->
+    <div class="glass-action-card" *ngIf="!isDriver">
+      <h3>Erhaltene Fahrangebote</h3>
+      <p>Verwalte die Angebote, die du für deine Fahranfrage erhalten hast.</p>
+      <a routerLink="/offers" class="action-link-glass">Fahrangebote verwalten</a>
+    </div>
+
+    <!-- Nach Nutzern suchen: Für ALLE sichtbar -->
+    <div class="glass-action-card">
+      <h3>🔎 Nach Nutzern suchen</h3>
+      <p>Finde andere Nutzer und ihre Fahrten.</p>
+      <a routerLink="/user-search" class="action-link-glass">Suchen</a>
+    </div>
+
+    <!-- Mein Konto: Für ALLE sichtbar -->
+    <div class="glass-action-card">
+      <h3>👤 Mein Konto</h3>
+      <p>Hier kannst du dein Guthaben ansehen und aufladen.</p>
+      <a routerLink="/account" class="action-link-glass">Konto verwalten</a>
+    </div>
+
+    <!-- Verfügbare Fahrtanfragen: NUR für Fahrer -->
+    <div class="glass-action-card" *ngIf="isDriver">
+      <h3>📋 Verfügbare Fahrtanfragen</h3>
+      <p>Durchsuche offene Fahrtanfragen und übernimm eine Fahrt.</p>
+      <a routerLink="/pending" class="action-link-glass">Verfügbare Anfragen</a>
+    </div>
+
+    <!-- Aktive Fahrt: NUR für Fahrer -->
+    <div class="glass-action-card" *ngIf="isDriver">
+      <h3>🧭 Aktive Fahrt</h3>
+      <p>Verfolge deine aktuelle Fahrt live.</p>
+      <a routerLink="/active-request" class="action-link-glass">Aktive Fahrt ansehen</a>
+    </div>
+
+    <!-- Fahrthistorie: Für ALLE sichtbar -->
+    <div class="glass-action-card">
+      <h3>🛣️ Fahrthistorie</h3>
+      <p>Sieh dir deine letzten Fahrten an.</p>
+      <a routerLink="/driving-history" class="action-link-glass">Historie ansehen</a>
+    </div>
+
+    <!-- NEU: Fahrt-Simulation: Für ALLE sichtbar -->
+    <div class="glass-action-card">
+      <h3>🕹️ Fahrt-Simulation</h3>
+      <p>Simuliere eine Fahrt auf der Karte in Echtzeit.</p>
+      <a [routerLink]="['/ride-execution', currentRideId]" class="action-link-glass">Fahrt simulieren</a>
+    </div>
+
+
+  </section>
+
+  <div class="modern-divider"></div>
+
+  <section class="info-glass-section">
+    <div class="info-glass-card">
+      <h3>Über SEP-Drive</h3>
+      <p>
+        SEP-Drive verbindet Mitfahrer und Fahrer sicher, modern und effizient.<br>
+        Routenplanung & Karten-Visualisierung inklusive!
+      </p>
+    </div>
+  </section>
+</div>

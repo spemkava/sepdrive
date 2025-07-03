@@ -1,0 +1,57 @@
+<div class="page-container" *ngIf="!noActiveRequestError; else noRequest">
+
+  <!-- Haupt-Layout: Karte links, Steuerung & Chat rechts -->
+  <div class="main-layout">
+
+    <!-- Karten-Container -->
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+
+    <!-- Seitenleiste für Steuerung und Chat -->
+    <div class="sidebar">
+      <h2>Fahrt-Simulation</h2>
+
+      <!-- Steuerungselemente -->
+      <div class="controls">
+        <button (click)="startSimulation()" [disabled]="isRunning || simulationFinished">Start</button>
+        <button (click)="pauseSimulation()" [disabled]="!isRunning">Pause</button>
+      </div>
+
+      <div class="slider-control">
+        <label>
+          Dauer: {{simulationDurationSec | number:'1.0-1'}}s
+          <input type="range" min="3" max="30" step="1" [value]="simulationDurationSec" (input)="onDurationChange($event)" />
+        </label>
+      </div>
+
+      <!-- Fortschrittsanzeige -->
+      <div class="progress-info">
+        <p>Laufzeit: {{ (elapsedMs / 1000) | number:'1.1-1' }} s / {{simulationDurationSec}} s</p>
+      </div>
+
+      <!-- Nachricht nach Abschluss der Simulation -->
+      <div *ngIf="simulationFinished" class="simulation-end">
+        <p>Fahrt abgeschlossen!</p>
+        <button (click)="goToRideSummary()">Zur Fahrtübersicht</button>
+      </div>
+
+      <!-- Chat-Komponente -->
+      <div class="chat-wrapper" *ngIf="rideId">
+        <h3>Chat</h3>
+        <!-- Die [rideRequestId] muss mit der Variable aus der .ts-Datei übereinstimmen -->
+        <app-chat [rideRequestId]="rideId"></app-chat>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Template, das angezeigt wird, wenn keine aktive Anfrage gefunden wird -->
+<ng-template #noRequest>
+  <div class="error-container">
+    <h2>Keine aktive Fahrt gefunden</h2>
+    <p>Es gibt derzeit keine angenommene Fahranfrage zum Simulieren.</p>
+  </div>
+</ng-template>

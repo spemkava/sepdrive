@@ -1,0 +1,38 @@
+<h2>Fahrthistorie</h2>
+<title>Fahrthistorie</title>
+
+<input type="text" placeholder="Suche einen Nutzernamen" [(ngModel)]="searchTerm" (input)="applyFilters()" />
+
+<table id="drivingHistory-table" class="display" style="width:100%">
+  <thead>
+  <tr>
+    <th (click)="sortTable('id')" style="cursor:pointer">Fahrt-ID</th>
+    <th (click)="sortTable('completedAt')" style="cursor:pointer">Abschlussdatum</th>
+    <th (click)="sortTable('totalDistance')" style="cursor:pointer">Distanz</th>
+    <th (click)="sortTable('totalTime')" style="cursor:pointer">Fahrtdauer</th>
+    <th (click)="sortTable('price')" style="cursor:pointer">Betrag</th>
+    <th (click)="sortTable('customerRating')" style="cursor:pointer">Kundenbewertung</th>
+    <th (click)="sortTable('driverRating')" style="cursor:pointer">Fahrerbewertung</th>
+    <th (click)="sortTable('customerFirstName')" style="cursor:pointer">Kunde Name</th>
+    <th (click)="sortTable('customerUsername')" style="cursor:pointer">Kunde Nutzername</th>
+    <th (click)="sortTable('driverFirstName')" style="cursor:pointer">Fahrer Name</th>
+    <th (click)="sortTable('driverUsername')" style="cursor:pointer">Fahrer Nutzername</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let ride of filteredHistory">
+    <td style="text-align: center">{{ ride.id }}</td>
+    <td style="text-align: center">{{ ride.completedAt }}</td>
+    <td style="text-align: center">{{ ride.totalDistance }}</td>
+    <td style="text-align: center">{{ ride.totalTime + ' Min'}}</td>
+    <td style="text-align: center">{{ ride.price + ' €' }}</td>
+    <td style="text-align: center">{{ ride.customerRating }}</td>
+    <td style="text-align: center">{{ ride.driverRating }}</td>
+    <td style="text-align: center">{{ ride.customerFirstName}} {{ ride.customerLastName }}</td>
+    <td style="text-align: center"><a href="profile/{{ ride.customerUsername }}">{{ ride.customerUsername }}</a></td>
+    <td style="text-align: center">{{ ride.driverFirstName }} {{ ride.driverLastName }}</td>
+    <td style="text-align: center"><a href="profile/{{ ride.driverUsername }}">{{ ride.driverUsername }}</a></td>
+  </tr>
+  </tbody>
+</table>
+

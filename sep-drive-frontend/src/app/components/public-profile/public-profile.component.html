@@ -1,0 +1,18 @@
+<!-- src/app/components/public-profile/public-profile.component.html -->
+<ng-container *ngIf="profile$ | async as profile">
+    <h2>Profil von {{ profile.username }}</h2>
+    <img [src]="profile.profilePictureUrl ? 'http://localhost:8080' + profile.profilePictureUrl : 'assets/default-profile.png'"
+         width="100" height="100" style="border-radius:50%;" alt="Profilbild">
+    <p><strong>Benutzername:</strong> {{ profile.username }}</p>
+    <p><strong>E-Mail:</strong> {{ profile.email }}</p>
+    <p><strong>Geburtsdatum:</strong> {{ profile.birthDate | date:'longDate' }}</p>
+
+    <p *ngIf="profile.vehicleClass != null">
+      <strong>Fahrzeugklasse:</strong> {{profile.vehicleClass}}
+    </p>
+    <p>
+      <strong>Bewertung:</strong>
+      {{ (profile.rating ?? 0) | number:'1.1-1' }} / 5.0
+    </p>
+  <p><strong>Gesamte Fahrten:</strong> {{ profile.totalRides ?? 0 }}</p>
+</ng-container>

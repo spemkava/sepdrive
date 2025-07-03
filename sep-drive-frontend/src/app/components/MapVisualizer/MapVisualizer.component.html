@@ -1,0 +1,8 @@
+<h2> Route </h2>
+
+<div class="map-container"
+     leaflet
+     [leafletOptions]="options"
+     [leafletLayers]="options.layers"
+     (leafletMapReady)="onMapReady($event)">
+</div>

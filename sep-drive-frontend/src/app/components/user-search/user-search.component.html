@@ -1,0 +1,25 @@
+<div class="search-bar">
+  <h3>Benutzersuche 🔎</h3>
+  <h6>Gebe einen Usernamen an, um mehr über ihn herauszufinden.</h6>
+  <input
+    type="text"
+    [(ngModel)]="query"
+    (keyup.enter)="search()"
+    placeholder="Benutzer suchen..."
+  />
+  <button (click)="search()">Suchen</button>
+</div>
+<div class="results">
+  <ul *ngIf="result.length > 0" class="results-list">
+    <li *ngFor="let user of result" class="result-item">
+      <a [routerLink]="['/profile', user.username]" class="profile-link">
+        <img *ngIf="user.profilePictureUrl" [src]="user.profilePictureUrl" alt="Profilbild" class="profile-pic"/>
+        <div class="user-info">
+          <strong>{{ user.username }}</strong><br />
+          <small>{{ user.email }}</small><br />
+          <small>{{ user.firstName }} {{ user.lastName }}</small>
+        </div>
+      </a>
+    </li>
+  </ul>
+</div>

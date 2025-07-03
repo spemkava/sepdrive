@@ -1,0 +1,56 @@
+<h2>Mein Profil</h2>
+
+<div *ngIf="errorMessage" class="alert alert-danger">
+  {{ errorMessage }}
+</div>
+
+<ng-container *ngIf="userProfile$ | async as profile; else loading">
+  <div class="profile-header">
+    <img
+      [src]="getProfilePicUrl(profile)"
+      alt="Profilbild"
+      class="profile-pic" />
+
+    <div class="profile-actions">
+      <label class="upload-btn">
+        Bild hochladen
+        <input
+          type="file"
+          accept="image/png, image/jpeg, image/gif"
+          (change)="onFileSelected($event)"
+          hidden
+        />
+      </label>
+
+
+      <button
+        type="button"
+        class="remove-btn"
+        (click)="resetProfilePicture()"
+      >
+        Bild entfernen
+      </button>
+    </div>
+  </div>
+
+  <h3>Willkommen, {{ profile.firstName }}!</h3>
+
+  <p><strong>ID:</strong> {{ profile.id }}</p>
+  <p><strong>Benutzername:</strong> {{ profile.username }}</p>
+  <p><strong>E-Mail:</strong> {{ profile.email }}</p>
+  <p><strong>Geburtsdatum:</strong> {{ profile.birthDate | date:'longDate' }}</p>
+
+  <p *ngIf="profile.vehicleClass != null">
+    <strong>Fahrzeugklasse:</strong> {{profile.vehicleClass}}
+  </p>
+  <p>
+    <strong>Bewertung:</strong>
+    {{ (profile.rating ?? 0) | number:'1.1-1' }} / 5.0
+  </p>
+  <p><strong>Gesamte Fahrten:</strong> {{ profile.totalRides ?? 0 }}</p>
+
+</ng-container>
+
+<ng-template #loading>
+  <p *ngIf="!errorMessage">Profil wird geladen...</p>
+</ng-template>

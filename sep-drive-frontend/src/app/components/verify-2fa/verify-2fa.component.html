@@ -1,0 +1,30 @@
+<h2>Zwei-Faktor Authentifizierung</h2>
+
+<div *ngIf="username">
+  <p>Bitte gib den 6-stelligen Code ein, der für den Benutzer '{{ username }}' generiert wurde.</p>
+  <p><small>(Bitte überprüfen Sie auch Ihren Spam Ordner!)</small></p>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <form [formGroup]="verifyForm" (ngSubmit)="onSubmit()">
+
+    <div class="form-group">
+      <label for="code">6-stelliger Code:</label>
+      <input type="text" id="code" formControlName="code" class="form-control" maxlength="6" pattern="[0-9]*" inputmode="numeric">
+      <div *ngIf="verifyForm.get('code')?.invalid && (verifyForm.get('code')?.touched || verifyForm.get('code')?.dirty)" class="text-danger">
+        <small *ngIf="verifyForm.get('code')?.hasError('required')">Code ist erforderlich.</small>
+        <small *ngIf="verifyForm.get('code')?.hasError('minlength') || verifyForm.get('code')?.hasError('maxlength')">Code muss genau 6 Ziffern haben.</small>
+        <small *ngIf="verifyForm.get('code')?.hasError('pattern')">Code darf nur Ziffern enthalten.</small>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="verifyForm.invalid">Code prüfen & Einloggen</button>
+
+  </form>
+</div>
+
+<div *ngIf="!username" class="alert alert-warning">
+  Benutzername nicht gefunden. Bitte starte den Login-Prozess erneut.
+</div>

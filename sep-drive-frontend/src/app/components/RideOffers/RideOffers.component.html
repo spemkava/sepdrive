@@ -1,0 +1,37 @@
+<h2>Fahrangebote</h2>
+
+<div *ngIf="errorMessage" class="alert alert-danger">
+  {{ errorMessage }}
+</div>
+
+<div *ngIf="activeRequest$ | async as request; else noRequestInfo">
+  <table id="drivingHistory-table" class="display" style="width:100%">
+    <thead>
+    <tr>
+      <th>Fahrt</th>
+      <th (click)="sortTable('driverName')" style="cursor:pointer">Fahrer Name</th>
+      <th (click)="sortTable('driverRating')" style="cursor:pointer">Fahrer Bewertung</th>
+      <th (click)="sortTable('driverTotalRides')" style="cursor:pointer">Anzahl der Fahrten</th>
+      <th>Annehmen</th>
+      <th>Ablehnen</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let offer of request.offers">
+      <td>Fahrt von: {{request.startLatitude}}, {{request.startLongitude}} nach:{{request.destinationLatitude}}, {{request.destinationLongitude}}</td>
+      <td>>Name: <a href="profile/{{offer.driverName}}">{{offer.driverName}}</a></td>
+      <td>Rating: {{offer.driverRating}}</td>
+      <td>Fahrten: {{offer.driverTotalRides}}</td>
+      <!--TODO: Gefahrene Strecke im UserProfile hinterlegen-->
+      <!-- <td>Gefahrene Strecke: {{offer.driverTotalDistance}}</td> -->
+      <td><button type="button" (click)="acceptOffer(offer.id)">Annehmen</button></td>
+      <td><button type="button" (click)="rejectOffer(offer.id)">Ablehnen</button></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<ng-template #noRequestInfo>
+  <p *ngIf="!errorMessage">
+    Du hast aktuell keine aktive Fahranfrage.
+  </p>
+</ng-template>

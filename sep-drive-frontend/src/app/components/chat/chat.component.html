@@ -1,0 +1,20 @@
+<!-- src/app/components/chat/chat.component.html -->
+<div *ngFor="let m of messages">
+  <div [class.self]="m.senderId === auth.userId"
+       [class.deleted]="m.deleted">
+    <ng-container *ngIf="!m.deleted; else deleted">
+      <span>{{ m.content }}</span>
+      <small *ngIf="m.edited">(bearbeitet)</small>
+    </ng-container>
+    <ng-template #deleted>
+      <em>Nachricht gelöscht</em>
+    </ng-template>
+
+    <button *ngIf="m.senderId === auth.userId && m.status !== 'READ'"
+            (click)="edit(m)">Bearbeiten</button>
+    <button *ngIf="m.senderId === auth.userId && m.status !== 'READ'"
+            (click)="del(m)">Löschen</button>
+  </div>
+</div>
+
+<input [(ngModel)]="draft" (keydown.enter)="send()" placeholder="Nachricht…">

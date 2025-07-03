@@ -1,0 +1,174 @@
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header-Styling */
+.app-header {
+  display: flex;
+  justify-content: space-between; /* Elemente verteilen */
+  align-items: center; /* Vertikal zentrieren */
+  padding: 10px 20px;
+  background-color: #f8f9fa; /* Helle Hintergrundfarbe */
+  border-bottom: 1px solid #dee2e6;
+  position: sticky; /* Bleibt oben beim Scrollen */
+  top: 0;
+  z-index: 1000; /* Über anderen Elementen */
+
+  .header-left,
+  .header-right {
+    flex-basis: 100px; /* Feste Breite für Seiten */
+    display: flex;
+    align-items: center;
+  }
+
+  .header-left {
+    justify-content: flex-start;
+  }
+
+  .header-right {
+    justify-content: flex-end;
+  }
+
+  .header-center {
+    flex-grow: 1; /* Nimmt verfügbaren Platz ein */
+    text-align: center;
+
+    /* Logo in der Mitte */
+    .app-logo {
+      height: 120px;
+      cursor: pointer;
+      /* Optional: ein wenig Margin, falls nötig */
+      margin: 0 auto;
+    }
+  }
+
+  button { /* Basis-Styling für Buttons im Header */
+    background: none;
+    border: none;
+    font-size: 1.5em; /* Größere Icons/Text */
+    cursor: pointer;
+    padding: 5px;
+  }
+
+  /* Profilbild oben rechts */
+  .profile-img {
+    height: 65px;
+    width: 65px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 1px solid #ccc;
+  }
+}
+
+/* Seitenmenü */
+.side-menu {
+  position: fixed; /* Feste Position */
+  top: 0;
+  left: -280px; /* Startet außerhalb des sichtbaren Bereichs */
+  width: 250px; /* Breite des Menüs */
+  height: 100%;
+  background-color: #e9ecef; /* Etwas dunklerer Hintergrund */
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  transition: left 0.3s ease-in-out; /* Sanfte Animation */
+  z-index: 1001; /* Über dem Header, aber unter dem Overlay */
+
+  &.open {
+    left: 0; /* Fährt ins Bild, wenn 'open' Klasse gesetzt ist */
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-top: 40px; /* Platz für Schließen-Button */
+
+    li {
+      margin-bottom: 15px;
+
+      a {
+        text-decoration: none;
+        color: #343a40;
+        font-size: 1.1em;
+        display: block; /* Ganze Breite klickbar machen */
+        padding: 5px 0;
+
+        &:hover {
+          color: #0056b3;
+        }
+      }
+
+      hr {
+        border-top: 1px solid #ced4da;
+        margin: 10px 0;
+      }
+    }
+  }
+
+  .close-menu-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5em;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+}
+
+/* Overlay, wenn Menü offen ist */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4); /* Halbdurchsichtig schwarz */
+  z-index: 1000; /* Unter dem Menü, aber über dem Inhalt */
+  display: block;
+}
+
+/* Hauptinhaltsbereich */
+.app-content {
+  flex-grow: 1; /* Nimmt den restlichen Platz ein */
+  padding: 20px; /* Etwas Abstand */
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  padding: 10px;
+  margin-top: auto; /* Schiebt ihn nach unten */
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  font-size: 0.9em;
+  color: #6c757d;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-right: 8px;
+  transition: background 0.2s;
+  cursor: pointer;
+
+  svg {
+    display: block;
+  }
+
+  &:hover, &:focus {
+    background: rgba(199, 34, 144, 0.12);
+    outline: none;
+  }
+}

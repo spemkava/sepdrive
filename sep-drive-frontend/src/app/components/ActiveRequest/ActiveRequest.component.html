@@ -1,0 +1,53 @@
+<h2>Aktive Fahranfrage</h2>
+
+ <p *ngIf="isLoading">Daten werden geladen...</p> <!--paragraph -->
+
+<div *ngIf="errorMessage" class="alert alert-danger">
+  {{ errorMessage }}
+</div>
+
+<div *ngIf="cancellationMessage" class="alert alert-success">
+  {{ cancellationMessage }}
+</div>
+
+<div *ngIf="activeRequest$ | async as request; else noRequestInfo"> <!--Active Request als lokale Variable, die geüllt werden kann -->
+  <p>Hier sind die Details deiner aktuellen Fahranfrage:</p>
+  <ul>
+    <li><strong>ID:</strong> {{ request.id }}</li>
+    <li><strong>Status:</strong> {{ request.status }}</li>
+    <li><strong>Erstellt am:</strong> {{ request.createdAt | date:'medium' }}</li>
+    <li><strong>Fahrzeugklasse:</strong> {{ request.requestedCarClass }}</li>
+    <li><strong>Distanz:</strong> {{ request.totalDistance }}</li>
+    <li><strong>Dauer:</strong> {{ request.totalTime }}</li>
+    <li><strong>Preis:</strong> {{ request.price }}</li>
+    <li>
+      <strong>Start:</strong>
+      {{ request.startAddress ? request.startAddress + ' (' : '' }}
+      Lat: {{ request.startLatitude | number:'1.5-5' }}, Lng: {{ request.startLongitude | number:'1.5-5' }}
+      {{ request.startAddress ? ')' : '' }}
+    </li>
+    <li>
+      <strong>Ziel:</strong>
+       {{ request.destinationAddress ? request.destinationAddress + ' (' : '' }}
+       Lat: {{ request.destinationLatitude | number:'1.5-5' }},
+       Lng: {{ request.destinationLongitude | number:'1.5-5' }}
+       {{ request.destinationAddress ? ')' : '' }}
+    </li>
+    </ul>
+
+  <button class="btn btn-danger" (click)="cancelRequest()" [disabled]="isLoading">
+    Anfrage stornieren
+  </button>
+
+</div>
+
+<ng-template #noRequestInfo>
+  <p *ngIf="!isLoading && !errorMessage">
+    Du hast aktuell keine aktive Fahranfrage.
+  </p>
+</ng-template>
+
+<app-MapVisualizer
+  [startCoords$]="startCoords$"
+  [destinationCoords$]="destinationCoords$">
+</app-MapVisualizer>
