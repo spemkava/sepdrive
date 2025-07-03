@@ -1,66 +1,53 @@
 package com.example.sepdrivebackend.dto;
 
 import com.example.sepdrivebackend.model.MessageStatus;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-/**
- * Daten-Transfer-Objekt für Chat-Nachrichten.
- */
+@Data
+@NoArgsConstructor
 public class ChatMessageDto {
 
     private Long id;
+    private String chatId;
     private Long senderId;
     private Long recipientId;
     private String content;
-    private MessageStatus status;   // SENT | DELIVERED | READ
+    private MessageStatus status;
     private boolean edited;
     private boolean deleted;
     private Instant timestamp;
 
-    /* ---------- Konstruktoren ---------- */
-
-    public ChatMessageDto() {
-        // nötig für Jackson / Deserialisierung
-    }
-
-    public ChatMessageDto(Long id,
-                          Long senderId,
-                          Long recipientId,
-                          String content,
-                          MessageStatus status,
-                          boolean edited,
-                          boolean deleted,
-                          Instant timestamp) {
-        this.id          = id;
-        this.senderId    = senderId;
+    /**
+     * Konstruktor für neue Nachrichten
+     */
+    public ChatMessageDto(String chatId, Long senderId, Long recipientId, String content) {
+        this.chatId = chatId;
+        this.senderId = senderId;
         this.recipientId = recipientId;
-        this.content     = content;
-        this.status      = status;
-        this.edited      = edited;
-        this.deleted     = deleted;
-        this.timestamp   = timestamp;
+        this.content = content;
+        this.status = MessageStatus.SENT;
+        this.edited = false;
+        this.deleted = false;
+        this.timestamp = Instant.now();
     }
 
-    /* ---------- Getter ---------- */
-
-    public Long getId()                { return id; }
-    public Long getSenderId()          { return senderId; }
-    public Long getRecipientId()       { return recipientId; }
-    public String getContent()         { return content; }
-    public MessageStatus getStatus()   { return status; }
-    public boolean isEdited()          { return edited; }
-    public boolean isDeleted()         { return deleted; }
-    public Instant getTimestamp()      { return timestamp; }
-
-    /* ---------- Setter ---------- */
-
-    public void setId(Long id)                           { this.id = id; }
-    public void setSenderId(Long senderId)               { this.senderId = senderId; }
-    public void setRecipientId(Long recipientId)         { this.recipientId = recipientId; }
-    public void setContent(String content)               { this.content = content; }
-    public void setStatus(MessageStatus status)          { this.status = status; }
-    public void setEdited(boolean edited)                { this.edited = edited; }
-    public void setDeleted(boolean deleted)              { this.deleted = deleted; }
-    public void setTimestamp(Instant timestamp)          { this.timestamp = timestamp; }
+    /**
+     * Factory-Methode zum Erstellen eines DTOs aus einer Entity
+     */
+    public static ChatMessageDto fromEntity(com.example.sepdrivebackend.model.ChatMessage message) {
+        ChatMessageDto dto = new ChatMessageDto();
+        dto.setId(message.getId());
+        dto.setChatId(message.getChatId());
+        dto.setSenderId(message.getSender().getId());
+        dto.setRecipientId(message.getRecipient().getId());
+        dto.setContent(message.getContent());
+        dto.setStatus(message.getStatus());
+        dto.setEdited(message.isEdited());
+        dto.setDeleted(message.isDeleted());
+        dto.setTimestamp(message.getTimestamp());
+        return dto;
+    }
 }
