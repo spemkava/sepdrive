@@ -235,4 +235,11 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.sendMessage();
     }
   }
+
+  /**
+   * TrackBy function for ngFor to improve performance
+   */
+  trackByMessageId(index: number, message: ChatMessageDto): any {
+    return message.id || index;
+  }
 }
