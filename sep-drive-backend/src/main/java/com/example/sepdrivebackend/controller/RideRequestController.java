@@ -106,9 +106,6 @@ public class RideRequestController {
         }
     }
 
-
-
-
     @GetMapping("/pending")
     public List<RideRequestDto> getActiveRideRequests() {
         List<RideStatus> activeStatuses = List.of(RideStatus.ACTIVE);
@@ -172,5 +169,55 @@ public class RideRequestController {
         String username = authentication.getName();
         // Wenn Daten da sind -> 200 OK mit Daten, sonst -> 404 Not Found
         return rideRequestService.completeRequest(rideRequestId,username);
+    }
+
+    /**
+     * Storniert das eigene Angebot für eine Fahranfrage
+     * Nur für Fahrer erlaubt
+     */
+    @DeleteMapping("/{rideRequestId}/offers/cancel")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<?> cancelOwnOffer(@PathVariable long rideRequestId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated.");
+        }
+
+        String username = authentication.getName();
+        
+        try {
+            RideRequestDto updatedRequest = rideRequestService.cancelOwnOffer(rideRequestId, username);
+            return ResponseEntity.ok(updatedRequest);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error cancelling offer for user " + username + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error cancelling offer.");
+        }
+    }
+
+    /**
+     * Ruft alle aktiven Angebote des eingeloggten Fahrers ab
+     * Nur für Fahrer erlaubt
+     */
+    @GetMapping("/my-offers")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<?> getMyActiveOffers(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated.");
+        }
+
+        String username = authentication.getName();
+        
+        try {
+            List<RideRequestDto> myOffers = rideRequestService.getMyActiveOffers(username);
+            return ResponseEntity.ok(myOffers);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
+        } catch (Exception e) {
+            System.err.println("Error fetching offers for user " + username + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching offers.");
+        }
     }
 }

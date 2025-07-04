@@ -20,6 +20,7 @@ import java.beans.Customizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service // Markiert diese Klasse als Spring Service Bean
 @RequiredArgsConstructor // Lombok generiert automatisch einen Konstruktor für finale Felder
@@ -217,7 +218,7 @@ public class RideRequestService {
                 .map(RideRequestDto::fromEntity); // Konvertiere das gefundene Entity (falls vorhanden) in ein DTO
         }
         
-        return null;
+        return Optional.empty();
     }
 
     @Transactional
@@ -250,5 +251,74 @@ public class RideRequestService {
 
         rideRequestRepository.save(rideRequest);
         return RideRequestDto.fromEntity(rideRequest);
+    }
+
+    /**
+     * Storniert das eigene Angebot eines Fahrers für eine bestimmte Fahranfrage
+     * @param rideRequestId ID der Fahranfrage
+     * @param username Benutzername des Fahrers
+     * @return Aktualisierte Fahranfrage ohne das stornierte Angebot
+     */
+    @Transactional
+    public RideRequestDto cancelOwnOffer(long rideRequestId, String username) {
+        User driver = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        RideRequest rideRequest = rideRequestRepository.findById(rideRequestId)
+                .orElseThrow(() -> new EntityNotFoundException("No ride request found with id: " + rideRequestId));
+
+        if (rideRequest.getOffers() == null) {
+            throw new EntityNotFoundException("No offers found for this ride request");
+        }
+
+        // Finde das Angebot des Fahrers
+        Optional<Offer> driverOffer = rideRequest.getOffers().stream()
+                .filter(offer -> offer.getDriverId().equals(driver.getId()))
+                .findFirst();
+
+        if (driverOffer.isEmpty()) {
+            throw new EntityNotFoundException("No offer found from this driver for the ride request");
+        }
+
+        // Prüfe ob die Fahranfrage noch aktiv ist (nicht bereits angenommen)
+        if (rideRequest.getStatus() != RideStatus.ACTIVE) {
+            throw new IllegalStateException("Cannot cancel offer - ride request is no longer active");
+        }
+
+        // Entferne das Angebot
+        rideRequest.getOffers().remove(driverOffer.get());
+
+        // Setze das hasSentOffer Flag zurück
+        driver.setHasSentOffer(false);
+        userRepository.save(driver);
+
+        // Speichere die aktualisierte Fahranfrage
+        rideRequestRepository.save(rideRequest);
+
+        return RideRequestDto.fromEntity(rideRequest);
+    }
+
+    /**
+     * Ruft alle aktiven Fahranfragen ab, für die der Fahrer ein Angebot gesendet hat
+     * @param username Benutzername des Fahrers
+     * @return Liste der Fahranfragen mit eigenen Angeboten
+     */
+    @Transactional(readOnly = true)
+    public List<RideRequestDto> getMyActiveOffers(String username) {
+        User driver = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        List<RideRequest> allActiveRequests = rideRequestRepository.findByStatusIn(List.of(RideStatus.ACTIVE));
+        
+        // Filtere nur die Anfragen, für die der Fahrer ein Angebot hat
+        List<RideRequest> requestsWithMyOffers = allActiveRequests.stream()
+                .filter(request -> request.getOffers() != null && 
+                        request.getOffers().stream()
+                                .anyMatch(offer -> offer.getDriverId().equals(driver.getId())))
+                .collect(Collectors.toList());
+
+        return requestsWithMyOffers.stream()
+                .map(RideRequestDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

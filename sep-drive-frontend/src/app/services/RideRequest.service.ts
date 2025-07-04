@@ -122,7 +122,7 @@ export class RideRequestService {
           return throwError(() => error); // Wirft den Fehler weiter
         }
       })
-    );  
+    );
   }
 
   submitRating(rideRequestId: number, rating:number): Observable<RideRequestDto> {
@@ -132,5 +132,31 @@ export class RideRequestService {
   completeRequest(rideRequestId: number) {
     return this.http.get<RideRequestDto>(`${this.apiUrl}/${rideRequestId}/complete`);
   }
-}
 
+  /**
+   * Storniert das eigene Angebot für eine Fahranfrage
+   * @param rideRequestId ID der Fahranfrage
+   * @returns Ein Observable mit der aktualisierten Fahranfrage
+   */
+  cancelOwnOffer(rideRequestId: number): Observable<RideRequestDto> {
+    return this.http.delete<RideRequestDto>(`${this.apiUrl}/${rideRequestId}/offers/cancel`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Fehler beim Stornieren des eigenen Angebots:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Ruft alle aktiven Angebote des eingeloggten Fahrers ab
+   * @returns Ein Observable mit der Liste der Fahranfragen mit eigenen Angeboten
+   */
+  getMyActiveOffers(): Observable<RideRequestDto[]> {
+    return this.http.get<RideRequestDto[]>(`${this.apiUrl}/my-offers`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Fehler beim Laden der eigenen Angebote:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+}

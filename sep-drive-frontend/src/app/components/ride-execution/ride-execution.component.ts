@@ -8,8 +8,9 @@ import { Subscription, interval } from 'rxjs';
 import { RideService } from '../../services/Ride.service';
 import { RideRequestService } from '../../services/RideRequest.service';
 import { SimulationSocketService } from '../../services/simulation-socket.service';
-import { ChatComponent } from '../chat/chat.component';
+import { WorkingChatComponent } from '../working-chat/working-chat.component'; // GEÄNDERT
 
+// Leaflet Icon Fix
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'assets/markers/default_marker.png',
@@ -20,7 +21,7 @@ L.Icon.Default.mergeOptions({
 @Component({
   selector: 'app-ride-execution',
   standalone: true,
-  imports: [CommonModule, FormsModule, ChatComponent],
+  imports: [CommonModule, FormsModule, WorkingChatComponent], // GEÄNDERT
   templateUrl: './ride-execution.component.html',
   styleUrls: ['./ride-execution.component.scss']
 })
@@ -36,7 +37,6 @@ export class RideExecutionComponent implements OnInit, OnDestroy {
   public noActiveRequestError = false;
 
   public simulationDurationSec = 10;
-  // KORREKTUR: elapsedMs muss public sein, damit es im HTML verwendet werden kann
   public elapsedMs = 0;
   private currentIndex = 0;
   private stepIntervalMs = 0;
@@ -62,9 +62,12 @@ export class RideExecutionComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    console.log('🚗 RideExecutionComponent initialized');
+
     const activeRequestSub = this.rideRequestService.getAcceptedRequest().subscribe(activeRequest => {
       if (activeRequest) {
         this.rideId = activeRequest.id;
+        console.log('✅ Active request found, ride ID:', this.rideId);
         this.initMapAndRoute(
           activeRequest.startLatitude,
           activeRequest.startLongitude,
@@ -72,6 +75,7 @@ export class RideExecutionComponent implements OnInit, OnDestroy {
           activeRequest.destinationLongitude
         );
       } else {
+        console.log('❌ No active request found');
         this.noActiveRequestError = true;
       }
     });
@@ -85,6 +89,7 @@ export class RideExecutionComponent implements OnInit, OnDestroy {
   startSimulation(): void {
     if (!this.route.length || this.isRunning) return;
     this.isRunning = true;
+    console.log('▶️ Starting simulation...');
 
     const timerSub = interval(this.updateIntervalMs).subscribe(() => {
       this.elapsedMs += this.updateIntervalMs;
@@ -109,6 +114,7 @@ export class RideExecutionComponent implements OnInit, OnDestroy {
     this.isRunning = false;
     this.subscriptions.unsubscribe();
     this.subscriptions = new Subscription();
+    console.log('⏸️ Simulation paused');
   }
 
   stopSimulation(isFinished: boolean): void {
@@ -118,6 +124,7 @@ export class RideExecutionComponent implements OnInit, OnDestroy {
       this.currentIndex = this.route.length - 1;
       this.marker?.setLatLng(this.route[this.currentIndex]);
       this.sendProgressUpdate(true);
+      console.log('🏁 Simulation finished');
     }
   }
 
@@ -145,7 +152,7 @@ export class RideExecutionComponent implements OnInit, OnDestroy {
 
       const routeSub = this.rideService.getRoute(startLat, startLon, endLat, endLon).subscribe((coords: number[][]) => {
         if (!coords || coords.length === 0) {
-          console.warn('Keine Routenkoordinaten erhalten');
+          console.warn('⚠️ No route coordinates received');
           return;
         }
 
@@ -155,20 +162,22 @@ export class RideExecutionComponent implements OnInit, OnDestroy {
         L.polyline(this.route, { color: 'blue' }).addTo(this.map!);
         this.marker = L.marker(this.route[0], { icon: this.defaultIcon }).addTo(this.map!);
         this.map!.fitBounds(L.latLngBounds(this.route));
+
+        console.log('🗺️ Route initialized with', this.route.length, 'points');
       });
       this.subscriptions.add(routeSub);
     }, 0);
   }
 
   private sendProgressUpdate(isFinished: boolean): void {
-      if (!this.rideId || this.currentIndex < 0 || this.currentIndex >= this.route.length) return;
+    if (!this.rideId || this.currentIndex < 0 || this.currentIndex >= this.route.length) return;
 
-      this.simulationSocket.sendProgress({
-          rideId: this.rideId,
-          currentIndex: this.currentIndex,
-          lat: this.route[this.currentIndex].lat,
-          lon: this.route[this.currentIndex].lng,
-          isFinished: isFinished
-      });
+    this.simulationSocket.sendProgress({
+      rideId: this.rideId,
+      currentIndex: this.currentIndex,
+      lat: this.route[this.currentIndex].lat,
+      lon: this.route[this.currentIndex].lng,
+      isFinished: isFinished
+    });
   }
 }

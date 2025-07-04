@@ -36,11 +36,11 @@
         <button (click)="goToRideSummary()">Zur Fahrtübersicht</button>
       </div>
 
-      <!-- Chat-Komponente -->
+      <!-- Chat-Komponente - AKTUALISIERT -->
       <div class="chat-wrapper" *ngIf="rideId">
         <h3>Chat</h3>
-        <!-- Die [rideRequestId] muss mit der Variable aus der .ts-Datei übereinstimmen -->
-        <app-chat [rideRequestId]="rideId"></app-chat>
+        <!-- Ersetzen Sie die alte Komponente durch die neue -->
+        <app-working-chat [rideRequestId]="rideId"></app-working-chat>
       </div>
     </div>
 

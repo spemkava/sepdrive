@@ -1,0 +1,255 @@
+.my-offers-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+
+  .header-card {
+    margin-bottom: 24px;
+
+    mat-card-header {
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.5rem;
+        color: #c72290;
+
+        mat-icon {
+          font-size: 1.8rem;
+          width: auto;
+          height: auto;
+        }
+      }
+
+      mat-card-subtitle {
+        margin-top: 8px;
+        color: #666;
+      }
+    }
+
+    mat-card-actions {
+      margin-top: 16px;
+
+      button {
+        margin-right: 12px;
+
+        mat-icon {
+          margin-right: 4px;
+        }
+      }
+    }
+  }
+
+  .loading-container,
+  .error-card,
+  .no-offers-card {
+    margin-bottom: 24px;
+    text-align: center;
+
+    mat-card-content {
+      padding: 40px 24px;
+
+      mat-icon {
+        margin-right: 8px;
+        vertical-align: middle;
+
+        &.large-icon {
+          font-size: 3rem;
+          width: 3rem;
+          height: 3rem;
+          color: #999;
+          margin-bottom: 16px;
+        }
+      }
+
+      h3 {
+        margin: 16px 0 8px 0;
+        color: #333;
+      }
+
+      p {
+        color: #666;
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .error-card {
+    mat-card-content {
+      color: #d32f2f;
+    }
+  }
+
+  .offers-table-card {
+    .offers-table {
+      width: 100%;
+
+      th {
+        font-weight: 600;
+        color: #333;
+        background-color: #f8f9fa;
+      }
+
+      td {
+        padding: 16px 8px;
+
+        &:first-child {
+          padding-left: 16px;
+        }
+
+        &:last-child {
+          padding-right: 16px;
+        }
+      }
+
+      .customer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        strong {
+          color: #333;
+        }
+
+        .rating {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          font-size: 0.85rem;
+          color: #666;
+
+          .star {
+            font-size: 1rem;
+            width: 1rem;
+            height: 1rem;
+            color: #ffc107;
+          }
+        }
+      }
+
+      .location-info {
+        max-width: 200px;
+
+        div {
+          font-weight: 500;
+          color: #333;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        small {
+          color: #666;
+          font-size: 0.8rem;
+        }
+      }
+
+      .car-class-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+
+        &.class-small {
+          background-color: #e3f2fd;
+          color: #1976d2;
+        }
+
+        &.class-medium {
+          background-color: #f3e5f5;
+          color: #7b1fa2;
+        }
+
+        &.class-deluxe {
+          background-color: #fff3e0;
+          color: #f57c00;
+        }
+      }
+
+      .price {
+        font-weight: 600;
+        color: #2e7d32;
+        font-size: 1.1rem;
+      }
+
+      .cancel-button {
+        mat-icon {
+          margin-right: 4px;
+        }
+
+        &:hover {
+          background-color: #d32f2f;
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .my-offers-container {
+    padding: 12px;
+
+    .offers-table-card {
+      .offers-table {
+        font-size: 0.85rem;
+
+        .location-info {
+          max-width: 120px;
+        }
+
+        .customer-info {
+          font-size: 0.85rem;
+        }
+
+        .cancel-button {
+          padding: 6px 12px;
+          font-size: 0.8rem;
+
+          mat-icon {
+            font-size: 1rem;
+            width: 1rem;
+            height: 1rem;
+          }
+        }
+      }
+    }
+
+    .header-card {
+      mat-card-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        button {
+          margin-right: 0;
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .my-offers-container {
+    .offers-table-card {
+      .offers-table {
+        // Vereinfachte mobile Ansicht
+        th, td {
+          padding: 8px 4px;
+          font-size: 0.8rem;
+        }
+
+        .location-info {
+          max-width: 100px;
+
+          div, small {
+            font-size: 0.75rem;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, Subject } from 'rxjs';
-import { Client, IMessage } from '@stomp/stompjs';
+import { Client, IMessage, IFrame } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 import { ChatMessageDto } from '../models/chat-message-dto.model';
@@ -18,53 +18,44 @@ export class ChatService {
   private messagesSubject = new Subject<ChatMessageDto>();
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private maxReconnectAttempts = 3;
 
   constructor(
     private http: HttpClient,
     private authService: AuthService
   ) {}
 
-  /**
-   * ✅ VERBESSERTE WebSocket-Verbindung mit besserer Fehlerbehandlung
-   */
   connect(): void {
     if (this.stompClient && this.stompClient.connected) {
       console.log('✅ Already connected to WebSocket');
       return;
     }
 
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      console.error('❌ No auth token found for WebSocket connection');
-      return;
-    }
-
-    console.log('🔄 Attempting WebSocket connection to:', this.wsUrl);
+    console.log('🔄 Attempting WebSocket connection...');
 
     this.stompClient = new Client({
       webSocketFactory: () => {
-        console.log('🔌 Creating SockJS connection...');
         return new SockJS(this.wsUrl);
       },
       connectHeaders: {
-        Authorization: `Bearer ${token}`
+        // Für jetzt ohne Authorization Header
       },
-      debug: (str) => {
-        console.log('🔍 STOMP Debug:', str);
+      debug: (str: string) => {
+        if (str.includes('ERROR') || str.includes('CONNECT')) {
+          console.log('🔍 STOMP:', str);
+        }
       },
       heartbeatIncoming: 20000,
       heartbeatOutgoing: 20000,
-      reconnectDelay: 5000,
+      reconnectDelay: 3000,
 
-      // ✅ Verbesserte Fehlerbehandlung
-      onConnect: (frame) => {
-        console.log('✅ Connected to WebSocket successfully:', frame);
+      onConnect: (frame: IFrame) => {
+        console.log('✅ WebSocket connected successfully');
         this.connectionStatusSubject.next(true);
         this.reconnectAttempts = 0;
 
-        // Subscribe to user-specific message queue
         if (this.stompClient) {
+          // Subscribe to user-specific message queue
           this.stompClient.subscribe('/user/queue/messages', (message: IMessage) => {
             try {
               const chatMessage: ChatMessageDto = JSON.parse(message.body);
@@ -85,29 +76,41 @@ export class ChatService {
               console.error('❌ Error parsing status update:', error);
             }
           });
+
+          // Subscribe to general topic
+          this.stompClient.subscribe('/topic/chat', (message: IMessage) => {
+            try {
+              const chatMessage: ChatMessageDto = JSON.parse(message.body);
+              console.log('📢 Broadcast message:', chatMessage);
+              this.messagesSubject.next(chatMessage);
+            } catch (error) {
+              console.error('❌ Error parsing broadcast message:', error);
+            }
+          });
         }
       },
 
-      onDisconnect: (frame) => {
-        console.log('❌ Disconnected from WebSocket:', frame);
+      onDisconnect: (frame: IFrame) => {
+        console.log('❌ WebSocket disconnected');
         this.connectionStatusSubject.next(false);
       },
 
-      onStompError: (frame) => {
-        console.error('❌ STOMP Error:', frame);
+      onStompError: (frame: IFrame) => {
+        // ✅ KORRIGIERT: Bracket-Notation für Index-Signatur
+        const errorMessage = frame.headers['message'] || frame.headers['error'] || 'Unknown STOMP error';
+        console.error('❌ STOMP Error:', errorMessage);
         this.connectionStatusSubject.next(false);
 
-        // ✅ Automatische Wiederverbindung mit Limit
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
-          console.log(`🔄 Reconnect attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
-          setTimeout(() => this.connect(), 5000 * this.reconnectAttempts);
+          console.log(`🔄 Reconnect attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in 3s...`);
+          setTimeout(() => this.connect(), 3000);
         } else {
-          console.error('❌ Max reconnection attempts reached. Chat functionality disabled.');
+          console.error('❌ Max reconnection attempts reached. Using HTTP fallback only.');
         }
       },
 
-      onWebSocketError: (error) => {
+      onWebSocketError: (error: any) => {
         console.error('❌ WebSocket Error:', error);
         this.connectionStatusSubject.next(false);
       }
@@ -121,14 +124,11 @@ export class ChatService {
     }
   }
 
-  /**
-   * ✅ Sichere Trennung der WebSocket-Verbindung
-   */
   disconnect(): void {
     if (this.stompClient) {
       try {
         this.stompClient.deactivate();
-        console.log('✅ WebSocket disconnected successfully');
+        console.log('✅ WebSocket disconnected');
       } catch (error) {
         console.error('❌ Error during disconnect:', error);
       } finally {
@@ -138,23 +138,15 @@ export class ChatService {
     }
   }
 
-  /**
-   * ✅ HTTP Fallback für Nachrichten senden
-   */
   sendMessage(message: ChatMessageDto): Observable<ChatMessageDto> {
     const headers = this.getAuthHeaders();
     console.log('📤 Sending message via HTTP:', message);
-
     return this.http.post<ChatMessageDto>(`${this.apiUrl}/messages`, message, { headers });
   }
 
-  /**
-   * Chat-Verlauf laden
-   */
   getChatHistory(rideRequestId: number): Observable<ChatMessageDto[]> {
     const headers = this.getAuthHeaders();
     console.log('📚 Loading chat history for ride:', rideRequestId);
-
     return this.http.get<ChatMessageDto[]>(`${this.apiUrl}/messages/${rideRequestId}`, { headers });
   }
 
@@ -193,9 +185,6 @@ export class ChatService {
     });
   }
 
-  /**
-   * ✅ Manuelle Wiederverbindung
-   */
   reconnect(): void {
     console.log('🔄 Manual reconnection requested');
     this.disconnect();

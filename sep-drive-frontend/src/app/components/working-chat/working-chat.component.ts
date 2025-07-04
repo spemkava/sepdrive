@@ -116,7 +116,320 @@ import { RideRequestDto } from '../../models/ride-request-dto.model';
       </div>
     </div>
   `,
-  styleUrls: ['./chat.component.scss']
+  styles: [`
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 400px;
+      max-width: 100%;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 12px 16px;
+      background: linear-gradient(90deg, #c72290, #ee46c5);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .chat-header h4 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ccc;
+    }
+
+    .connection-status.connected .status-indicator {
+      background: #4CAF50;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .debug-info {
+      background: #f8f9fa;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .debug-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+
+    .loading-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 40px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #c72290;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: #fafafa;
+      scroll-behavior: smooth;
+    }
+
+    .no-messages {
+      text-align: center;
+      color: #666;
+      margin-top: 40px;
+      font-style: italic;
+    }
+
+    .message-wrapper {
+      margin-bottom: 16px;
+      display: flex;
+    }
+
+    .message-wrapper.my-message {
+      justify-content: flex-end;
+    }
+
+    .message-wrapper.my-message .message {
+      background: linear-gradient(135deg, #c72290, #ee46c5);
+      color: white;
+      margin-left: 60px;
+    }
+
+    .message-wrapper.other-message {
+      justify-content: flex-start;
+    }
+
+    .message-wrapper.other-message .message {
+      background: #fff;
+      color: #333;
+      border: 1px solid #e0e0e0;
+      margin-right: 60px;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .message.deleted {
+      opacity: 0.6;
+      background: #f5f5f5 !important;
+      color: #999 !important;
+    }
+
+    .message-content {
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .deleted-message {
+      font-style: italic;
+    }
+
+    .edited-indicator {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-left: 8px;
+    }
+
+    .message-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    .timestamp {
+      font-size: 0.7rem;
+    }
+
+    .message-status {
+      margin-left: 8px;
+    }
+
+    .message-status.read .read-status {
+      color: #4CAF50;
+    }
+
+    .message-input-container {
+      border-top: 1px solid #e0e0e0;
+      background: white;
+      padding: 12px 16px;
+    }
+
+    .input-wrapper {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .message-input {
+      flex: 1;
+      min-height: 40px;
+      max-height: 120px;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      resize: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .message-input:focus {
+      border-color: #c72290;
+      box-shadow: 0 0 0 2px rgba(199, 34, 144, 0.1);
+    }
+
+    .send-button {
+      min-width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c72290, #ee46c5);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(199, 34, 144, 0.3);
+    }
+
+    .send-button:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(199, 34, 144, 0.4);
+    }
+
+    .send-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .send-icon {
+      font-size: 1.2rem;
+      transform: rotate(-45deg);
+    }
+
+    .input-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+      font-size: 0.7rem;
+      color: #999;
+    }
+
+    .warning {
+      color: #ff9800;
+      font-weight: 500;
+    }
+
+    .error-message {
+      background: #ffebee;
+      color: #c62828;
+      padding: 8px 12px;
+      margin: 8px 16px;
+      border-radius: 4px;
+      border-left: 4px solid #f44336;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-error {
+      background: none;
+      border: none;
+      color: #c62828;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 0;
+      margin-left: 8px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .chat-container {
+        height: 350px;
+      }
+
+      .message-wrapper.my-message .message {
+        margin-left: 20px;
+      }
+
+      .message-wrapper.other-message .message {
+        margin-right: 20px;
+      }
+
+      .message {
+        max-width: 85%;
+        padding: 10px 14px;
+      }
+
+      .messages-container {
+        padding: 12px;
+      }
+
+      .message-input-container {
+        padding: 10px 12px;
+      }
+    }
+  `]
 })
 export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   @Input() rideRequestId!: number;
