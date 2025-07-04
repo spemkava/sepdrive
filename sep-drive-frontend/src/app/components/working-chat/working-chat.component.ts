@@ -32,6 +32,10 @@ import { RideRequestDto } from '../../models/ride-request-dto.model';
         <small>Andere Person: {{ otherUser?.username || 'Wird ermittelt...' }}</small><br>
         <small>Nachrichten: {{ messages.length }}</small>
         <button (click)="loadChatHistory()" class="debug-btn">🔄 Neu laden</button>
+        <label class="auto-refresh-toggle">
+          <input type="checkbox" [(ngModel)]="autoRefreshEnabled" (change)="toggleAutoRefresh()">
+          Auto-Update
+        </label>
       </div>
 
       <!-- Loading Indicator -->
@@ -52,12 +56,44 @@ import { RideRequestDto } from '../../models/ride-request-dto.model';
              [class.other-message]="!isMyMessage(message)">
 
           <div class="message" [class.deleted]="message.deleted">
+            <div class="message-header" *ngIf="isMyMessage(message) && !message.deleted && message.status !== 'READ'">
+              <div class="message-actions">
+                <button class="action-btn edit-btn" (click)="startEditMessage(message)" title="Bearbeiten">
+                  ✏️
+                </button>
+                <button class="action-btn delete-btn" (click)="deleteMessage(message)" title="Löschen">
+                  🗑️
+                </button>
+              </div>
+            </div>
+
             <div class="message-content">
               <strong>{{ getMessageSender(message) }}:</strong>
-              <span *ngIf="!message.deleted">{{ message.content }}</span>
+
+              <!-- Normal message display -->
+              <span *ngIf="!message.deleted && editingMessageId !== message.id">
+                {{ message.content }}
+              </span>
+
+              <!-- Edit mode -->
+              <div *ngIf="!message.deleted && editingMessageId === message.id" class="edit-mode">
+                <textarea
+                  [(ngModel)]="editMessageContent"
+                  class="edit-textarea"
+                  rows="2"
+                  maxlength="2000">
+                </textarea>
+                <div class="edit-actions">
+                  <button class="save-btn" (click)="saveEditMessage(message)">💾 Speichern</button>
+                  <button class="cancel-btn" (click)="cancelEditMessage()">❌ Abbrechen</button>
+                </div>
+              </div>
+
+              <!-- Deleted message -->
               <span *ngIf="message.deleted" class="deleted-message">
                 <em>Nachricht wurde gelöscht</em>
               </span>
+
               <span *ngIf="message.edited && !message.deleted" class="edited-indicator">
                 (bearbeitet)
               </span>
@@ -175,6 +211,10 @@ import { RideRequestDto } from '../../models/ride-request-dto.model';
       padding: 8px 12px;
       font-size: 0.8rem;
       border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .debug-btn {
@@ -185,7 +225,20 @@ import { RideRequestDto } from '../../models/ride-request-dto.model';
       border-radius: 3px;
       font-size: 0.7rem;
       cursor: pointer;
-      margin-left: 8px;
+    }
+
+    .auto-refresh-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .auto-refresh-toggle input[type="checkbox"] {
+      margin: 0;
+      width: auto;
+      height: auto;
     }
 
     .loading-container {
@@ -239,6 +292,7 @@ import { RideRequestDto } from '../../models/ride-request-dto.model';
       background: linear-gradient(135deg, #c72290, #ee46c5);
       color: white;
       margin-left: 60px;
+      position: relative;
     }
 
     .message-wrapper.other-message {
@@ -267,9 +321,99 @@ import { RideRequestDto } from '../../models/ride-request-dto.model';
       color: #999 !important;
     }
 
+    .message-header {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .message-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .action-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .edit-btn:hover {
+      background: #fff3cd;
+    }
+
+    .delete-btn:hover {
+      background: #f8d7da;
+    }
+
     .message-content {
       margin-bottom: 4px;
       line-height: 1.4;
+    }
+
+    .edit-mode {
+      margin-top: 8px;
+    }
+
+    .edit-textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .save-btn, .cancel-btn {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .save-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .save-btn:hover {
+      background: #218838;
+    }
+
+    .cancel-btn {
+      background: #6c757d;
+      color: white;
+    }
+
+    .cancel-btn:hover {
+      background: #5a6268;
     }
 
     .deleted-message {
@@ -443,7 +587,16 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
   isLoading: boolean = false;
   isConnected: boolean = false;
   errorMessage: string = '';
-  showDebug: boolean = true; // Für Entwicklung
+  showDebug: boolean = true;
+
+  // Edit functionality
+  editingMessageId: number | null = null;
+  editMessageContent: string = '';
+
+  // Auto-refresh functionality
+  autoRefreshEnabled: boolean = true;
+  private autoRefreshInterval: any;
+  private readonly REFRESH_INTERVAL_MS = 5000; // 5 seconds
 
   private subscriptions = new Subscription();
   private shouldScrollToBottom = false;
@@ -459,17 +612,44 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
     console.log('🎯 Working Chat initialized for ride:', this.rideRequestId);
     this.loadCurrentUser();
     this.initializeChat();
+    this.startAutoRefresh();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
     this.chatService.disconnect();
+    this.stopAutoRefresh();
   }
 
   ngAfterViewChecked(): void {
     if (this.shouldScrollToBottom) {
       this.scrollToBottom();
       this.shouldScrollToBottom = false;
+    }
+  }
+
+  private startAutoRefresh(): void {
+    if (this.autoRefreshEnabled) {
+      this.autoRefreshInterval = setInterval(() => {
+        if (!this.isLoading && this.currentUser && this.otherUser) {
+          this.loadChatHistory(true); // silent reload
+        }
+      }, this.REFRESH_INTERVAL_MS);
+    }
+  }
+
+  private stopAutoRefresh(): void {
+    if (this.autoRefreshInterval) {
+      clearInterval(this.autoRefreshInterval);
+      this.autoRefreshInterval = null;
+    }
+  }
+
+  toggleAutoRefresh(): void {
+    if (this.autoRefreshEnabled) {
+      this.startAutoRefresh();
+    } else {
+      this.stopAutoRefresh();
     }
   }
 
@@ -488,7 +668,6 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   private loadRideRequestAndOtherUser(): void {
-    // Lade die Fahranfrage, um Kunde und Fahrer zu identifizieren
     this.rideRequestService.getAcceptedRequest().subscribe({
       next: (rideRequest) => {
         if (rideRequest && rideRequest.id === this.rideRequestId) {
@@ -497,7 +676,6 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
           this.determineOtherUser();
         } else {
           console.log('🔍 Trying alternative method to load ride request...');
-          // Fallback: Versuche über aktive Anfrage
           this.rideRequestService.getActiveRequest().subscribe({
             next: (activeRequest) => {
               if (activeRequest) {
@@ -525,7 +703,6 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
     }
 
     if (this.currentUser.role === 'CUSTOMER') {
-      // Ich bin Kunde, der andere ist der Fahrer
       if (this.rideRequest.offers && this.rideRequest.offers.length > 0) {
         const driverName = this.rideRequest.offers[0].driverName;
         this.loadUserByUsername(driverName);
@@ -533,7 +710,6 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
         this.errorMessage = 'Kein Fahrer gefunden für diese Fahrt';
       }
     } else if (this.currentUser.role === 'DRIVER') {
-      // Ich bin Fahrer, der andere ist der Kunde
       this.loadUserByUsername(this.rideRequest.customerUsername);
     }
   }
@@ -554,7 +730,6 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
 
   private handleNoRideRequest(): void {
     this.errorMessage = 'Fahranfrage nicht gefunden. Chat-Partner kann nicht ermittelt werden.';
-    // Fallback: Erlaube Chat mit sich selbst für Tests
     if (this.currentUser) {
       this.otherUser = this.currentUser;
       console.log('⚠️ Fallback: Using self as other user for testing');
@@ -563,10 +738,8 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   private initializeChat(): void {
-    // WebSocket-Verbindung aufbauen
     this.chatService.connect();
 
-    // Auf neue Nachrichten hören
     const messageSubscription = this.chatService.getMessages().subscribe({
       next: (message) => {
         if (message && message.chatId === `ride_${this.rideRequestId}`) {
@@ -581,7 +754,6 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
 
     this.subscriptions.add(messageSubscription);
 
-    // Verbindungsstatus überwachen
     const connectionSubscription = this.chatService.getConnectionStatus().subscribe({
       next: (connected) => {
         this.isConnected = connected;
@@ -591,16 +763,24 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
     this.subscriptions.add(connectionSubscription);
   }
 
-  loadChatHistory(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+  loadChatHistory(silent: boolean = false): void {
+    if (!silent) {
+      this.isLoading = true;
+      this.errorMessage = '';
+    }
 
     this.chatService.getChatHistory(this.rideRequestId).subscribe({
       next: (messages) => {
         this.messages = messages.sort((a, b) =>
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
-        this.shouldScrollToBottom = true;
+
+        // Auto-mark messages as read when user is on the page
+        this.markAllUnreadMessagesAsRead();
+
+        if (!silent) {
+          this.shouldScrollToBottom = true;
+        }
         this.isLoading = false;
         console.log('✅ Chat history loaded:', messages.length, 'messages');
       },
@@ -610,9 +790,17 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
         if (error.status === 404) {
           console.log('ℹ️ No chat history found - this is normal for new chats');
           this.messages = [];
-        } else {
+        } else if (!silent) {
           this.errorMessage = `Fehler beim Laden der Nachrichten: ${error.status}`;
         }
+      }
+    });
+  }
+
+  private markAllUnreadMessagesAsRead(): void {
+    this.messages.forEach(message => {
+      if (message.recipientId === this.currentUser?.id && message.status !== 'READ') {
+        this.markAsRead(message);
       }
     });
   }
@@ -651,6 +839,56 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
+  // Edit functionality
+  startEditMessage(message: ChatMessageDto): void {
+    this.editingMessageId = message.id || null;
+    this.editMessageContent = message.content;
+  }
+
+  saveEditMessage(message: ChatMessageDto): void {
+    if (!message.id || !this.editMessageContent.trim()) {
+      return;
+    }
+
+    this.chatService.editMessage(message.id, this.editMessageContent.trim()).subscribe({
+      next: (updatedMessage) => {
+        console.log('✅ Message edited successfully:', updatedMessage);
+        this.addOrUpdateMessage(updatedMessage);
+        this.cancelEditMessage();
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        console.error('❌ Error editing message:', error);
+        this.errorMessage = `Fehler beim Bearbeiten: ${error.error?.message || error.message}`;
+      }
+    });
+  }
+
+  cancelEditMessage(): void {
+    this.editingMessageId = null;
+    this.editMessageContent = '';
+  }
+
+  deleteMessage(message: ChatMessageDto): void {
+    if (!message.id || !confirm('Möchten Sie diese Nachricht wirklich löschen?')) {
+      return;
+    }
+
+    this.chatService.deleteMessage(message.id).subscribe({
+      next: () => {
+        console.log('✅ Message deleted successfully');
+        // Mark message as deleted locally
+        message.deleted = true;
+        message.content = '';
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        console.error('❌ Error deleting message:', error);
+        this.errorMessage = `Fehler beim Löschen: ${error.error?.message || error.message}`;
+      }
+    });
+  }
+
   private addOrUpdateMessage(message: ChatMessageDto): void {
     const existingIndex = this.messages.findIndex(m => m.id === message.id);
 
@@ -663,7 +901,7 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
       );
     }
 
-    // Mark message as read if it's for current user
+    // Auto-mark as read if message is for current user
     if (message.recipientId === this.currentUser?.id && message.status !== 'READ') {
       this.markAsRead(message);
     }
@@ -672,6 +910,10 @@ export class WorkingChatComponent implements OnInit, OnDestroy, AfterViewChecked
   markAsRead(message: ChatMessageDto): void {
     if (message.id && message.recipientId === this.currentUser?.id) {
       this.chatService.markAsRead(message.id).subscribe({
+        next: () => {
+          // Update local message status
+          message.status = 'READ';
+        },
         error: (error) => {
           console.error('❌ Error marking message as read:', error);
         }
