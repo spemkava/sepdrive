@@ -19,13 +19,14 @@ public class UserProfileDto {
     private String email;
     private LocalDate birthDate;
     private Instant createdAt;
-    private String profilePictureUrl; // Pfad/URL zum Bild (String)
-    private String profileImageContentType; //Typ des Profilbildes (String)
-    private Double rating;            // Bewertung (double)
-    private Integer totalRides;       // Anzahl Fahrten (int)
+    private String profilePictureUrl;
+    private String profileImageContentType;
+    private Double rating;
+    private Integer totalRides;
     private String role;
     private String vehicleClass;
-    private Double accountBalance; // NEUES FELD
+    private Double accountBalance;
+    private Boolean hasSentOffer; 
 
     public UserProfileDto() {
 
@@ -47,7 +48,7 @@ public class UserProfileDto {
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setBirthDate(user.getBirthDate());
-        dto.setCreatedAt(user.getCreatedAt()); // Stelle sicher, dass der Typ hier zu deiner Felddefinition passt (Instant oder String)
+        dto.setCreatedAt(user.getCreatedAt());
 
         if (user.getProfilePicture() != null && user.getProfileImageContentType() != null) {
             String base64 = Base64.getEncoder().encodeToString(user.getProfilePicture());
@@ -58,6 +59,7 @@ public class UserProfileDto {
         dto.setTotalRides(user.getTotalRides());
         dto.setRole(user.getRole());
         dto.setAccountBalance(user.getAccountBalance()); 
+        dto.setHasSentOffer(user.isHasSentOffer()); 
 
         if (user.getVehicleClass() != null) {
             dto.setVehicleClass(user.getVehicleClass());

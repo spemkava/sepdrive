@@ -17,4 +17,5 @@ export interface UserProfile {
   vehicleClass?: string;           // Auto klasse des Fahrers
   role: 'CUSTOMER' | 'DRIVER';
   accountBalance?: number;
+  hasSentOffer?: boolean;
 }

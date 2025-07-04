@@ -85,7 +85,12 @@
   <ng-container matColumnDef="actions">
     <th mat-header-cell *matHeaderCellDef></th>
     <td mat-cell *matCellDef="let req">
-      <button (click)="sendOffer(req)">Angebot senden</button>
+      <button
+      (click)="sendOffer(req)"
+      [disabled]="!canSendOffer()"
+      [class.disabled-button]="!canSendOffer()">
+      {{ canSendOffer() ? 'Angebot senden' : 'Bereits gesendet' }}
+      </button>
     </td>
   </ng-container>
 

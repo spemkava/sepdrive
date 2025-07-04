@@ -50,6 +50,7 @@ export class PendingComponent implements OnInit {
   dataSource = new MatTableDataSource<RideRequestDto>();
   driverLat: number | null = null;
   driverLng: number | null = null;
+  hasDriverSentOffer: boolean = false;
   driverName!: string;
   driverRating?: number;
   driverTotalRides?: number ;
@@ -72,6 +73,8 @@ export class PendingComponent implements OnInit {
       this.driverName = profile.username;
       this.driverRating = profile.rating;
       this.driverTotalRides = profile.totalRides;
+
+      this.hasDriverSentOffer = profile.hasSentOffer || false;
     });
     this.rideRequestService.getActiveRideRequests().subscribe(data => {
       this.dataSource.data = data;
@@ -176,22 +179,38 @@ export class PendingComponent implements OnInit {
 
 
 
-  sendOffer(req: RideRequestDto): void {
-    console.log('Angebot senden für Anfrage:', req.id);
-    // TODO: Implementation
-    const offer: OfferDto = {
-      driverName: this.driverName,
-      driverRating: this.driverRating ?? 0,
-      driverTotalRides: this.driverTotalRides ?? 0
-    };
 
-    this.rideRequestService.sendOffer(req.id, offer).subscribe({
-      next:(updatedRequest) => {
-        req.offers = updatedRequest.offers;
-        alert('Angebot gesendet!');
-        this.router.navigate(['/home']);
-      },
-    })
+  sendOffer(req: RideRequestDto): void {
+    if (this.hasDriverSentOffer) {
+      alert('Sie haben bereits ein Angebot gesendet!');
+      return;
+    }
+
+  const offer: OfferDto = {
+    driverName: this.driverName,
+    driverRating: this.driverRating ?? 0,
+    driverTotalRides: this.driverTotalRides ?? 0
+  };
+
+  this.rideRequestService.sendOffer(req.id, offer).subscribe({
+    next: (updatedRequest) => {
+      req.offers = updatedRequest.offers;
+      alert('Angebot erfolgreich gesendet!');
+      this.router.navigate(['/home']);
+    },
+    error: (error) => {
+      console.error('Fehler beim Senden des Angebots:', error);
+
+      if (error.status === 403) {
+        alert('Sie haben bereits ein Angebot gesendet. Sie können nur ein Angebot pro Fahranfrage senden.');
+      } else {
+        alert('Fehler beim Senden des Angebots. Bitte versuchen Sie es später erneut.');
+      }
+    }
+  });
+}
+canSendOffer(): boolean {
+    return !this.hasDriverSentOffer;
   }
 
 }

@@ -21,7 +21,7 @@ public class RideController {
 
     private final RideService rideService;
     private final RideRequestRepository rideRequestRepository;
-    private final UserRepository userRepository;
+    private final UserRepository userRepository; // oder dein Auth-Kontext/Fahrer-Kontext
 
     public RideController(RideService rideService,
                           RideRequestRepository rideRequestRepository,
@@ -42,13 +42,11 @@ public class RideController {
         return ResponseEntity.ok(ride);
     }
 
-    // ✅ KORRIGIERTE URL: /api/rides/active (ohne "1" am Ende!)
-    @GetMapping("/active")
+    @GetMapping("/api/rides/active")
     public ResponseEntity<RideDto> getCurrentActiveRide(Authentication authentication) {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        
         Optional<Ride> rideOpt = rideService.getCurrentActiveRideForUser(user);
         return rideOpt.map(ride -> ResponseEntity.ok(RideDto.fromEntity(ride)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
