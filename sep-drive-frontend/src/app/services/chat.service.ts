@@ -17,6 +17,8 @@ export class ChatService {
   private stompClient: Client | null = null;
   private messagesSubject = new Subject<ChatMessageDto>();
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
 
   constructor(
     private http: HttpClient,
@@ -24,137 +26,165 @@ export class ChatService {
   ) {}
 
   /**
-   * Stellt WebSocket-Verbindung her
+   * ✅ VERBESSERTE WebSocket-Verbindung mit besserer Fehlerbehandlung
    */
   connect(): void {
     if (this.stompClient && this.stompClient.connected) {
-      console.log('Already connected to WebSocket');
+      console.log('✅ Already connected to WebSocket');
       return;
     }
 
     const token = localStorage.getItem('authToken');
     if (!token) {
-      console.error('No auth token found for WebSocket connection');
+      console.error('❌ No auth token found for WebSocket connection');
       return;
     }
 
+    console.log('🔄 Attempting WebSocket connection to:', this.wsUrl);
+
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS(this.wsUrl),
+      webSocketFactory: () => {
+        console.log('🔌 Creating SockJS connection...');
+        return new SockJS(this.wsUrl);
+      },
       connectHeaders: {
         Authorization: `Bearer ${token}`
       },
       debug: (str) => {
-        console.log('STOMP: ' + str);
+        console.log('🔍 STOMP Debug:', str);
       },
       heartbeatIncoming: 20000,
       heartbeatOutgoing: 20000,
-      reconnectDelay: 5000
+      reconnectDelay: 5000,
+
+      // ✅ Verbesserte Fehlerbehandlung
+      onConnect: (frame) => {
+        console.log('✅ Connected to WebSocket successfully:', frame);
+        this.connectionStatusSubject.next(true);
+        this.reconnectAttempts = 0;
+
+        // Subscribe to user-specific message queue
+        if (this.stompClient) {
+          this.stompClient.subscribe('/user/queue/messages', (message: IMessage) => {
+            try {
+              const chatMessage: ChatMessageDto = JSON.parse(message.body);
+              console.log('📨 Received message:', chatMessage);
+              this.messagesSubject.next(chatMessage);
+            } catch (error) {
+              console.error('❌ Error parsing message:', error);
+            }
+          });
+
+          // Subscribe to message status updates
+          this.stompClient.subscribe('/user/queue/messages/status', (message: IMessage) => {
+            try {
+              const statusUpdate: ChatMessageDto = JSON.parse(message.body);
+              console.log('📋 Status update:', statusUpdate);
+              this.messagesSubject.next(statusUpdate);
+            } catch (error) {
+              console.error('❌ Error parsing status update:', error);
+            }
+          });
+        }
+      },
+
+      onDisconnect: (frame) => {
+        console.log('❌ Disconnected from WebSocket:', frame);
+        this.connectionStatusSubject.next(false);
+      },
+
+      onStompError: (frame) => {
+        console.error('❌ STOMP Error:', frame);
+        this.connectionStatusSubject.next(false);
+
+        // ✅ Automatische Wiederverbindung mit Limit
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          this.reconnectAttempts++;
+          console.log(`🔄 Reconnect attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+          setTimeout(() => this.connect(), 5000 * this.reconnectAttempts);
+        } else {
+          console.error('❌ Max reconnection attempts reached. Chat functionality disabled.');
+        }
+      },
+
+      onWebSocketError: (error) => {
+        console.error('❌ WebSocket Error:', error);
+        this.connectionStatusSubject.next(false);
+      }
     });
 
-    this.stompClient.onConnect = (frame) => {
-      console.log('Connected to WebSocket:', frame);
-      this.connectionStatusSubject.next(true);
-
-      // Subscribe to user-specific message queue
-      this.stompClient!.subscribe('/user/queue/messages', (message: IMessage) => {
-        const chatMessage: ChatMessageDto = JSON.parse(message.body);
-        this.messagesSubject.next(chatMessage);
-      });
-
-      // Subscribe to message status updates
-      this.stompClient!.subscribe('/user/queue/messages/status', (message: IMessage) => {
-        const statusUpdate: ChatMessageDto = JSON.parse(message.body);
-        this.messagesSubject.next(statusUpdate);
-      });
-    };
-
-    this.stompClient.onDisconnect = () => {
-      console.log('Disconnected from WebSocket');
-      this.connectionStatusSubject.next(false);
-    };
-
-    this.stompClient.onStompError = (frame) => {
-      console.error('WebSocket error:', frame);
-      this.connectionStatusSubject.next(false);
-    };
-
-    this.stompClient.activate();
-  }
-
-  /**
-   * Trennt WebSocket-Verbindung
-   */
-  disconnect(): void {
-    if (this.stompClient) {
-      this.stompClient.deactivate();
+    try {
+      this.stompClient.activate();
+    } catch (error) {
+      console.error('❌ Failed to activate STOMP client:', error);
       this.connectionStatusSubject.next(false);
     }
   }
 
   /**
-   * Sendet eine Nachricht über HTTP
+   * ✅ Sichere Trennung der WebSocket-Verbindung
+   */
+  disconnect(): void {
+    if (this.stompClient) {
+      try {
+        this.stompClient.deactivate();
+        console.log('✅ WebSocket disconnected successfully');
+      } catch (error) {
+        console.error('❌ Error during disconnect:', error);
+      } finally {
+        this.connectionStatusSubject.next(false);
+        this.stompClient = null;
+      }
+    }
+  }
+
+  /**
+   * ✅ HTTP Fallback für Nachrichten senden
    */
   sendMessage(message: ChatMessageDto): Observable<ChatMessageDto> {
     const headers = this.getAuthHeaders();
+    console.log('📤 Sending message via HTTP:', message);
+
     return this.http.post<ChatMessageDto>(`${this.apiUrl}/messages`, message, { headers });
   }
 
   /**
-   * Lädt Chat-Verlauf für eine Fahranfrage
+   * Chat-Verlauf laden
    */
   getChatHistory(rideRequestId: number): Observable<ChatMessageDto[]> {
     const headers = this.getAuthHeaders();
+    console.log('📚 Loading chat history for ride:', rideRequestId);
+
     return this.http.get<ChatMessageDto[]>(`${this.apiUrl}/messages/${rideRequestId}`, { headers });
   }
 
-  /**
-   * Markiert eine Nachricht als gelesen
-   */
   markAsRead(messageId: number): Observable<void> {
     const headers = this.getAuthHeaders();
     return this.http.put<void>(`${this.apiUrl}/messages/${messageId}/read`, {}, { headers });
   }
 
-  /**
-   * Bearbeitet eine Nachricht
-   */
   editMessage(messageId: number, newContent: string): Observable<ChatMessageDto> {
     const headers = this.getAuthHeaders();
     return this.http.put<ChatMessageDto>(`${this.apiUrl}/messages/${messageId}`, newContent, { headers });
   }
 
-  /**
-   * Löscht eine Nachricht
-   */
   deleteMessage(messageId: number): Observable<void> {
     const headers = this.getAuthHeaders();
     return this.http.delete<void>(`${this.apiUrl}/messages/${messageId}`, { headers });
   }
 
-  /**
-   * Observable für eingehende Nachrichten
-   */
   getMessages(): Observable<ChatMessageDto> {
     return this.messagesSubject.asObservable();
   }
 
-  /**
-   * Observable für Verbindungsstatus
-   */
   getConnectionStatus(): Observable<boolean> {
     return this.connectionStatusSubject.asObservable();
   }
 
-  /**
-   * Prüft ob WebSocket verbunden ist
-   */
   isConnected(): boolean {
     return this.stompClient?.connected || false;
   }
 
-  /**
-   * Hilfsmethode für Auth-Headers
-   */
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('authToken');
     return new HttpHeaders({
@@ -164,16 +194,11 @@ export class ChatService {
   }
 
   /**
-   * Sendet Nachricht über WebSocket (optional, für Echtzeit-Features)
+   * ✅ Manuelle Wiederverbindung
    */
-  sendMessageViaWebSocket(message: ChatMessageDto): void {
-    if (this.stompClient && this.stompClient.connected) {
-      this.stompClient.publish({
-        destination: '/app/chat.sendMessage',
-        body: JSON.stringify(message)
-      });
-    } else {
-      console.error('WebSocket not connected. Cannot send message via WebSocket.');
-    }
+  reconnect(): void {
+    console.log('🔄 Manual reconnection requested');
+    this.disconnect();
+    setTimeout(() => this.connect(), 1000);
   }
 }

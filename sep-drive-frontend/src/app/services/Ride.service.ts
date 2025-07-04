@@ -4,76 +4,84 @@ import {HttpClient} from '@angular/common/http';
 import {RideDtoModel} from '../models/ride-dto.model';
 import {map} from 'rxjs/operators';
 
-
-
 @Injectable({
   providedIn: 'root'
 })
 export class RideService {
 
-  private apiUrl = 'http://localhost:8080/api/rides'; // Passe ggf. den API-Pfad an!
+  private apiUrl = 'http://localhost:8080/api/rides'; // ✅ Basis URL korrekt
 
   constructor(private http: HttpClient) {}
 
   /**
-   * Holt die aktuell aktive Fahrt für den eingeloggten Nutzer.
-   * (Der Endpoint muss so im Backend implementiert sein.)
+   * ✅ KORRIGIERT: Korrekte URL ohne zusätzliche Zeichen
    */
   getCurrentActiveRide(): Observable<RideDtoModel | null> {
+    console.log('🔍 Fetching current active ride from:', `${this.apiUrl}/active`);
+
     return this.http.get<RideDtoModel>(`${this.apiUrl}/active`).pipe(
-      catchError(() => of(null)) // Wenn keine Fahrt vorhanden, liefere null
+      catchError((error) => {
+        console.error('❌ Error fetching active ride:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          url: error.url,
+          message: error.message
+        });
+        return of(null); // Wenn keine Fahrt vorhanden, liefere null
+      })
     );
   }
+
   acceptRequest(rideRequestId: number, driverId: number): Observable<RideDtoModel> {
-    return this.http.post<RideDtoModel>(`/api/rides/from-request/${rideRequestId}/accept?driverId=${driverId}`, {});
+    const url = `${this.apiUrl}/from-request/${rideRequestId}/accept?driverId=${driverId}`;
+    console.log('🎯 Accepting ride request:', url);
+
+    return this.http.post<RideDtoModel>(url, {}).pipe(
+      catchError((error) => {
+        console.error('❌ Error accepting ride request:', error);
+        throw error;
+      })
+    );
   }
 
-  /**
-   * Holt alle abgeschlossenen oder laufenden Fahrten für den Nutzer.
-   * (Kann als Array oder paginiert zurückgeliefert werden.)
-   */
   getAllRides(): Observable<RideDtoModel[]> {
     return this.http.get<RideDtoModel[]>(this.apiUrl);
   }
 
-  /**
-   * Holt die Details einer bestimmten Fahrt (z.B. für Verlauf, Bewertung, etc.)
-   */
   getRideById(rideId: number): Observable<RideDtoModel> {
     return this.http.get<RideDtoModel>(`${this.apiUrl}/${rideId}`);
   }
 
-  /**
-   * Optional: Bewertung abschicken
-   */
   submitRating(rideId: number, rating: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${rideId}/rate`, { rating });
   }
 
   getRoute(startLat: number, startLon: number, endLat: number, endLon: number): Observable<number[][]> {
-    console.log('Start:', startLat, startLon, 'End:', endLat, endLon);
-    return this.http.get<any>(`http://localhost:8080/api/route?startLat=${startLat}&startLon=${startLon}&endLat=${endLat}&endLon=${endLon}`).pipe(
-      map(res => {
-        console.log('Backend Response für getRoute:', res);
-        if (!res.features || res.features.length === 0) {
-          console.error('Keine Routen im Response vorhanden:', res);
-          return [];
-        }
+    console.log('🗺️ Getting route from backend API');
+    const url = `http://localhost:8080/api/route?startLat=${startLat}&startLon=${startLon}&endLat=${endLat}&endLon=${endLon}`;
 
-        const coords = res.features[0]?.geometry?.coordinates;
-        if (!coords || !Array.isArray(coords)) {
-          console.error('Keine gültigen Koordinaten in der Route:', res);
+    return this.http.get<any>(url).pipe(
+      map(res => {
+        console.log('✅ Route response received:', res);
+        if (!res.features || res.features.length === 0) {
+          console.error('❌ No route features found');
           return [];
         }
 
         const feature = res.features[0];
         if (!feature.geometry || feature.geometry.type !== 'LineString' || !feature.geometry.coordinates) {
-          console.error('Keine gültige LineString Geometrie in der Route:', feature);
+          console.error('❌ Invalid route geometry');
           return [];
         }
+
+        console.log('✅ Route coordinates extracted:', feature.geometry.coordinates.length, 'points');
         return feature.geometry.coordinates;
+      }),
+      catchError((error) => {
+        console.error('❌ Route request failed:', error);
+        return of([]);
       })
     );
   }
-  // Weitere Methoden je nach Bedarf: Fahrt beenden, neue Fahrt anlegen (selten direkt), etc.
 }
