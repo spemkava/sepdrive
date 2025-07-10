@@ -4,6 +4,8 @@
     <img [src]="profile.profilePictureUrl ? 'http://localhost:8080' + profile.profilePictureUrl : 'assets/default-profile.png'"
          width="100" height="100" style="border-radius:50%;" alt="Profilbild">
     <p><strong>Benutzername:</strong> {{ profile.username }}</p>
+    <p><strong>Vorname:</strong> {{ profile.firstName }}</p>
+    <p><strong>Nachname:</strong> {{ profile.lastName }}</p>
     <p><strong>E-Mail:</strong> {{ profile.email }}</p>
     <p><strong>Geburtsdatum:</strong> {{ profile.birthDate | date:'longDate' }}</p>
 

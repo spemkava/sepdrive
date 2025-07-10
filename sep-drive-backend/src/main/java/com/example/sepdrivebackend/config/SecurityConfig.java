@@ -54,8 +54,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/ws-chat/**").permitAll()  // WebSocket Endpunkt erlauben
+                        .requestMatchers("/ws-chat/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()          // WebSocket Endpunkt erlauben
                         .requestMatchers("/app/**").permitAll()      // STOMP-Nachrichten erlauben
+                        .requestMatchers("/topic/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

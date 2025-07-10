@@ -7,7 +7,6 @@ import com.example.sepdrivebackend.model.User;
 import com.example.sepdrivebackend.repository.RideRepository;
 import com.example.sepdrivebackend.repository.RideRequestRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

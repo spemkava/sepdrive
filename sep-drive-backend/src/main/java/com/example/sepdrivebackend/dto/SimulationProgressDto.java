@@ -1,8 +1,9 @@
 package com.example.sepdrivebackend.dto;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
+
+@Getter
+@Setter
 @Data
 @NoArgsConstructor
 public class SimulationProgressDto {

@@ -2,6 +2,8 @@ package com.example.sepdrivebackend.dto;
 
 import com.example.sepdrivebackend.model.Ride;
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -15,9 +17,9 @@ public class RideDto {
     private String passengerName;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private double distance;
-    private double totalDuration;
-    private double price;
+    private BigDecimal distance;
+    private BigDecimal totalDuration;
+    private BigDecimal price;
     private Double ratingCustomer;
     private Double ratingDriver;
     private String customerFirstName;

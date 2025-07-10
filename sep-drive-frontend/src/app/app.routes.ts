@@ -11,13 +11,17 @@ import { UserSearchComponent } from './components/user-search/user-search.compon
 import { ProfileComponent } from './components/profile/profile.component';
 import { PublicProfileComponent } from './components/public-profile/public-profile.component';
 import { AccountComponent } from './components/account/account.component';
-import {RideExecutionComponent} from './components/ride-execution/ride-execution.component';
-import {RideSummaryComponent} from './components/RideSummary/ride-summary.component';
+import { RideExecutionComponent} from './components/ride-execution/ride-execution.component';
+import { RideSummaryComponent} from './components/RideSummary/ride-summary.component';
 import { PendingComponent } from './components/pending/pending.component';
 import { DrivingHistoryComponent } from './components/drivingHistory/drivingHistory.component';
 import { RideOffersComponent } from './components/RideOffers/RideOffers.component';
+
+//import { ChatComponent } from './components/chat/chat.component';
+import {LeaderboardComponent} from './components/leaderboard/leaderboard.component';
 //import { ChatComponent } from './components/chat/chat.component';
 import { MyOffersComponent } from './components/my-offers/my-offers.component';
+
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -37,11 +41,15 @@ export const routes: Routes = [
   { path: 'ride-summary/:rideId', component: RideSummaryComponent },
   //{ path: 'chat', component: ChatComponent},
 
+
+  //{ path: 'chat', component: ChatComponent},
+
   { path: 'account', component: AccountComponent, canActivate: [authGuard], title: 'SEP-Drive - Mein Konto'},
   { path: 'pending', component: PendingComponent, canActivate: [authGuard], title: 'SEP-Drive - Pending' },
   { path: 'account', component: AccountComponent, canActivate: [authGuard], title: 'SEP-Drive - Mein Konto'},
   { path: 'driving-history', component: DrivingHistoryComponent, canActivate: [authGuard], title: 'SEP-Drive - Fahrhistorie'},
   { path: 'offers', component: RideOffersComponent, canActivate: [authGuard], title: 'SEP-Drive - Fahrangebote' },
+  { path: 'my-offers', component: MyOffersComponent, canActivate: [authGuard], title: 'SEP-Drive - Meine Angebote' },
+  { path: 'leaderboard', component: LeaderboardComponent, canActivate: [authGuard], title: 'SEP-Drive - Bestenliste'},
   { path: 'my-offers', component: MyOffersComponent, canActivate: [authGuard], title: 'SEP-Drive - Meine Angebote' }
-
 ];

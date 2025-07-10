@@ -1,0 +1,30 @@
+<h2>Fahrer Bestenliste</h2>
+<title>Bestenliste</title>
+
+<input id="search-bar" type="text" placeholder="Suche einen Fahrer" [(ngModel)]="searchTerm" (input)="applyFilters()" />
+
+<table id="leaderboard-table" class="display" style="width: 100%">
+  <thead>
+  <tr>
+    <th (click)="sortTable('driverUsername')" style="cursor:pointer">Nutzername</th>
+    <th (click)="sortTable('driverName')" style="cursor:pointer">Name</th>
+    <th (click)="sortTable('totalDistance')" style="cursor:pointer">Gesamtgefahrene Distanz</th>
+    <th (click)="sortTable('totalAvgRating')" style="cursor:pointer">⌀ Bewertung</th>
+    <th (click)="sortTable('totalDrivingTime')" style="cursor:pointer">Fahrtzeit</th>
+    <th (click)="sortTable('totalRides')" style="cursor:pointer">Anzahl der Fahrten</th>
+    <th (click)="sortTable('totalMoney')" style="cursor:pointer">Verdientes Geld</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let driver of filteredList"
+    [ngClass]="{ 'highlight-own-row': driver.driverUsername === currentUserName}">
+    <td style="text-align: center"><a href="profile/{{ driver.driverUsername }}">{{ driver.driverUsername }}</a></td>
+    <td style="text-align: center">{{ driver.driverFirstName }} {{ driver.driverLastName }}</td>
+    <td style="text-align: center"> {{ driver.totalDistance }} km</td>
+    <td style="text-align: center"> {{ driver.totalAvgRating }}</td>
+    <td style="text-align: center"> {{ driver.totalDrivingTime }} min</td>
+    <td style="text-align: center"> {{ driver.totalRides }}</td>
+    <td style="text-align: center"> {{ driver.totalMoney }} €</td>
+  </tr>
+  </tbody>
+</table>

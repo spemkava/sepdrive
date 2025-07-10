@@ -9,6 +9,7 @@ import {CarClass } from '../../models/enums.model';
 import {MapVisualizerComponent} from '../MapVisualizer/MapVisualizer.component';
 import {BehaviorSubject, Subscription} from 'rxjs';
 import {PoiFilterPipe } from '../../pipes/poi-filter.pipe'
+import {LatLngExpression} from 'leaflet';
 
 
 
@@ -54,16 +55,27 @@ export class RideRequestFormComponent implements OnInit, AfterViewInit {
   DestinationAdressSearchQuery = "";
   DestinationAdressSearchResults: Array<{ lat: number; lon: number; label: string }> = [];
 
+  private _stops$ = new BehaviorSubject<LatLngExpression[]>([]);
+  stops$ = this._stops$.asObservable();
 
   private poisChangedSubscription?: Subscription;
   poiSearchStart: string = '';
   poiSearchEnd: string = '';
+  poiSearchStop: string = '';
   //^Subscription für die POI-Änderungen
   poiSelectionMap: { [key: string]: boolean } = {
     restaurant: true,
     museum: true,
     theatre: true
   };
+
+  newStopMode: 'Coordinates' | 'Address' | 'POI' | 'Geolocation' = 'Coordinates';
+  newStopAddressQuery = '';
+  newStopAddressResults: Array<{ lat: number; lon: number; label: string }> = [];
+
+  newStopLat?: number;
+  newStopLon?: number;
+
 
   get selectedPOITypes(): string[] {
     return Object.entries(this.poiSelectionMap)
@@ -324,13 +336,84 @@ export class RideRequestFormComponent implements OnInit, AfterViewInit {
       destinationLongitude: [null],
 
     });
+    this.ride.stops = [];
+    this._stops$.next([]);
   }
 
-    ngAfterViewInit(): void {
+  searchStopAddress(): void {
+    this.geocode.search(this.newStopAddressQuery).subscribe((data: any) => {
+      this.newStopAddressResults = data.map((item: { lat: number; lon: number; display_name: string }) => {
+        return { lat: item.lat, lon: item.lon, label: item.display_name };
+      });
+    });
+  }
+
+  ngAfterViewInit(): void {
     this.poisChangedSubscription = this.mapVisualizerComponent.poisChanged.subscribe(pois => {
       this.loadedPOIs = pois;
       console.log('RequestRideForm: POIs empfangen:', this.loadedPOIs)
     });
+  }
+
+
+  removeStop(index: number): void {
+    if (!this.ride.stops) return;
+
+    this.ride.stops.splice(index, 1); // entferne den Stopp
+
+    // Aktualisiere Observable → Map redraw + Routing
+    const stopCoords: [number, number][] = this.ride.stops.map(s => [s.latitude, s.longitude]);
+    this._stops$.next(stopCoords);
+  }
+
+  useGeolocationForStop() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        this.newStopLat = position.coords.latitude;
+        this.newStopLon = position.coords.longitude;
+      });
+    }
+  }
+
+  chooseStopPOI(event: Event): void {
+    const selectedId = (event.target as HTMLSelectElement).value;
+    const selected = this.loadedPOIs.find(p => p.id.toString() === selectedId);
+    const lat = selected?.lat ?? selected?.center?.lat;
+    const lon = selected?.lon ?? selected?.center?.lon;
+
+    if (lat != null && lon != null) {
+      this.newStopLat = lat;
+      this.newStopLon = lon;
+    }
+  }
+
+  chooseStopAddress(address: { lat: number; lon: number; label: string }): void {
+    this.newStopLat = address.lat;
+    this.newStopLon = address.lon;
+    this.newStopAddressQuery = address.label;
+
+    console.log('Zwischenstopp-Adresse gewählt:', this.newStopLat, this.newStopLon);
+  }
+
+  confirmAddStop(): void {
+    const lat = this.newStopLat;
+    const lon = this.newStopLon;
+    const address = this.newStopAddressQuery || '';
+
+    if (lat != null && lon != null) {
+      if (!this.ride.stops) this.ride.stops = [];
+      this.ride.stops.push({ latitude: lat, longitude: lon, address });
+      this._stops$.next(this.ride.stops.map(s => [s.latitude, s.longitude]));
+
+      // Reset Eingaben
+      this.newStopLat = undefined;
+      this.newStopLon = undefined;
+      this.newStopAddressQuery = '';
+      this.newStopAddressResults = [];
+      this.poiSearchStop = '';
+    } else {
+      console.warn("Koordinaten für neuen Stopp fehlen.");
+    }
   }
 
 }

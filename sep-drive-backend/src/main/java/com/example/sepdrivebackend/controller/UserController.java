@@ -97,40 +97,6 @@ public class UserController {
         return new ResponseEntity<>(image, headers, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}/profileImage") 
-    public ResponseEntity<String> deleteProfileImage(@PathVariable Long id) {
-        try {
-            userService.deleteProfileImage(id);
-            return ResponseEntity.ok("Profilbild zurückgesetzt");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-    @PostMapping("/{id}/reset-profile-to-default") // Neuer Pfad und POST-Methode
-    public ResponseEntity<String> resetProfileImageToDefault(@PathVariable Long id, Authentication authentication) {
-        // Optional: Sicherheitscheck, ob der authentifizierte Benutzer die Aktion für sich selbst ausführt
-        User authenticatedUser = userRepository.findByUsername(authentication.getName())
-                 .orElseThrow(() -> new UsernameNotFoundException("Authentifizierter Benutzer nicht gefunden: " + authentication.getName()));
-        if (!authenticatedUser.getId().equals(id)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Aktion nicht erlaubt.");
-        }
-
-        try {
-            userService.resetProfilePictureToDefault(id); // Ruft die neue Service-Methode auf
-            return ResponseEntity.ok("Profilbild auf Standard zurückgesetzt.");
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Fehler beim Zurücksetzen des Profilbilds auf Standard für User ID " + id + ": " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fehler beim Zurücksetzen des Profilbilds.");
-        }
-    }
-
-
-
-
-
     @PostMapping("/{userId}/account/deposit")
     public ResponseEntity<?> depositFunds(
             @PathVariable Long userId,

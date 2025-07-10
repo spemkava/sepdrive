@@ -5,7 +5,7 @@
 </div>
 
 <ng-container *ngIf="userProfile$ | async as profile; else loading">
-  <div class="profile-header">
+  <div class="profile-container">
     <img
       [src]="getProfilePicUrl(profile)"
       alt="Profilbild"
@@ -21,22 +21,14 @@
           hidden
         />
       </label>
-
-
-      <button
-        type="button"
-        class="remove-btn"
-        (click)="resetProfilePicture()"
-      >
-        Bild entfernen
-      </button>
     </div>
   </div>
 
   <h3>Willkommen, {{ profile.firstName }}!</h3>
 
-  <p><strong>ID:</strong> {{ profile.id }}</p>
   <p><strong>Benutzername:</strong> {{ profile.username }}</p>
+  <p><strong>Vorname:</strong> {{ profile.firstName }}</p>
+  <p><strong>Nachname:</strong> {{ profile.lastName }}</p>
   <p><strong>E-Mail:</strong> {{ profile.email }}</p>
   <p><strong>Geburtsdatum:</strong> {{ profile.birthDate | date:'longDate' }}</p>
 

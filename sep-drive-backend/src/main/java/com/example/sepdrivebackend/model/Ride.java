@@ -56,14 +56,14 @@ public class Ride {
     private RideStatus status;
 
     //Preis und Bewertung
-    private double price;
+    private BigDecimal price;
 
     private Double driverRating;   // von Kunde für Fahrer (1-5)
     private Double customerRating; // von Fahrer für Kunde (1-5)
 
     //Streckeninformationen
-    private double totalDistance; // Gesamtdistanz der Fahrt in Kilometern
-    private double totalDuration; // Gesamtdauer der Fahrt in Minuten
+    private BigDecimal totalDistance; // Gesamtdistanz der Fahrt in Kilometern
+    private BigDecimal totalDuration; // Gesamtdauer der Fahrt in Minuten
 
     //Startpunkt
     @Column(precision = 10, scale = 7)

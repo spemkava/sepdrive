@@ -94,12 +94,20 @@ public class RideRequest {
     private Instant updatedAt;
 
     @Column
+    private Double customerProfileRating;
+
+    @Column
     private Double customerRating;
 
     @Column
     private Double driverRating;
 
     @Column
-    private Date completedAt;
+    private Instant completedAt;
+
+    @ElementCollection
+    @CollectionTable(name = "ride_request_stops", joinColumns = @JoinColumn(name = "ride_request_id"))
+    private List<StopLocation> stops = new ArrayList<>();
+
 
 }

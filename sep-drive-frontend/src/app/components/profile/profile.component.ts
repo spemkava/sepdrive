@@ -1,15 +1,12 @@
-
 import { Component, OnInit } from '@angular/core';
-// CommonModule für *ngIf etc., DatePipe/DecimalPipe falls im Template genutzt
-import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
-// ReactiveFormsModule etc. beibehalten, falls andere Formulare existieren
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Observable, of } from 'rxjs';
-import {tap, catchError, switchMap} from 'rxjs/operators';
+import {tap, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { UserService } from '../../services/user.service';
 import { UserProfile } from '../../models/user-profile.model';
-import {ActivatedRoute, ParamMap } from '@angular/router';
+import {ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
@@ -17,8 +14,6 @@ import {ActivatedRoute, ParamMap } from '@angular/router';
   imports: [
     CommonModule,
     ReactiveFormsModule
-    // DatePipe, // Einkommentieren falls benötigt
-    // DecimalPipe // Einkommentieren falls benötigt
   ],
 
   templateUrl: './profile.component.html',
@@ -132,45 +127,6 @@ export class ProfileComponent implements OnInit {
       error: err => {
         console.error('Upload fehlgeschlagen:', err);
         this.errorMessage = err.error?.message || err.message || 'Profilbild konnte nicht hochgeladen werden.';
-      }
-    });
-  }
-  /**
-   * Setzt das Profilbild wieder aufs Standard zurück
-   */
-  resetProfilePicture(): void {
-    this.errorMessage = null;
-    this.successMessage = null;
-
-
-
-
-    // Schritt 1: Lokalen Zustand sofort auf Default setzen
-    localStorage.removeItem('profileImageUrl');
-    // Aktualisiere das currentUser Objekt, damit die Ansicht (falls sie direkt davon abhängt) sich ändert
-    if (this.currentUser) {
-      this.currentUser.profilePictureUrl = undefined; // Oder direkt this.defaultProfilePic setzen
-    }
-    // Erzwinge, dass das Observable einen leeren Bildpfad hat, um die Ansicht über async pipe zu aktualisieren
-    this.userProfile$ = of({ ...this.currentUser, profilePictureUrl: undefined } as UserProfile);
-
-
-    // Schritt 2: Backend anweisen, das Bild auf Default zu setzen
-    const userId = this.currentUser?.id;
-    if (!userId) {
-      this.errorMessage = 'Benutzerinformationen nicht geladen.';
-      return;
-    }
-    this.http.post(`/api/users/${userId}/reset-profile-to-default`, {}).subscribe({
-      next: () => {
-        this.successMessage = 'Profilbild auf Standard zurückgesetzt.';
-
-        this.userService.refreshProfile();
-      },
-      error: err => {
-        console.error('Fehler beim Zurücksetzen des Profilbilds auf dem Server:', err);
-        this.errorMessage = 'Fehler beim Zurücksetzen auf dem Server. Das Bild wurde lokal entfernt.';
-
       }
     });
   }

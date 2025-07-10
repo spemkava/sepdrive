@@ -1,22 +1,25 @@
 package com.example.sepdrivebackend.service;
+
 import com.example.sepdrivebackend.dto.CreateRideRequestDto;
 import com.example.sepdrivebackend.dto.OfferDto;
 import com.example.sepdrivebackend.dto.RideRequestDto;
-import com.example.sepdrivebackend.model.Offer;
-import com.example.sepdrivebackend.model.RideRequest;
-import com.example.sepdrivebackend.model.RideStatus;
-import com.example.sepdrivebackend.model.User;
+import com.example.sepdrivebackend.model.*;
+import com.example.sepdrivebackend.repository.RideRepository;
 import com.example.sepdrivebackend.repository.RideRequestRepository;
 import com.example.sepdrivebackend.repository.UserRepository;
+
+import ch.qos.logback.core.joran.conditional.ElseAction;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.beans.Customizer;
+import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +31,7 @@ public class RideRequestService {
 
     private final RideRequestRepository rideRequestRepository;
     private final UserRepository userRepository; // Wird benötigt, um den Kunden zu finden
+    private final RideRepository rideRepository;
 
     /**
      * Ruft die aktuell aktive Fahranfrage für einen Kunden ab.
@@ -77,6 +81,14 @@ public class RideRequestService {
         newRequest.setTotalDistance(requestDto.getTotalDistance());
         newRequest.setTotalTime(requestDto.getTotalTime());
         newRequest.setPrice(requestDto.getPrice());
+
+        if (requestDto.getStops() != null) {
+            List<StopLocation> stopEntities = requestDto.getStops().stream()
+                    .map(s -> new StopLocation(s.getLatitude(), s.getLongitude(), s.getAddress()))
+                    .collect(Collectors.toList());
+            newRequest.setStops(stopEntities);
+        }
+
         newRequest.setStatus(RideStatus.ACTIVE); // Status auf AKTIV setzen
         // createdAt und updatedAt werden automatisch durch @CreationTimestamp/@UpdateTimestamp gesetzt
 
@@ -229,28 +241,93 @@ public class RideRequestService {
         RideRequest rideRequest = rideRequestRepository.findById(rideRequestId)
                 .orElseThrow(() -> new EntityNotFoundException("No ride request found with id: " + rideRequestId));
 
+        //Ride ride = rideRepository.findByRideRequest(rideRequest)
+        //        .orElseThrow(() -> new EntityNotFoundException("No ride found for rideRequest: " + rideRequest));
+
 
         if (user.getRole().equals("CUSTOMER")) {
             rideRequest.setCustomerRating(rating);
+            //ride.setCustomerRating(rating);
         }
         if (user.getRole().equals("DRIVER")) {
             rideRequest.setDriverRating(rating);
+            //ride.setDriverRating(rating);
         }
 
         rideRequestRepository.save(rideRequest);
+        //rideRepository.save(ride);
         return RideRequestDto.fromEntity(rideRequest);
     }
 
     @Transactional
     public RideRequestDto completeRequest(long rideRequestId, String username) {
+
         
         RideRequest rideRequest = rideRequestRepository.findById(rideRequestId)
                 .orElseThrow(() -> new EntityNotFoundException("No ride request found with id: " + rideRequestId));
 
-        rideRequest.setStatus(RideStatus.COMPLETED);
+        if (!rideRequest.getStatus().equals(RideStatus.COMPLETED)) {
+            long driverId = rideRequest.getOffers().get(0).getDriverId();
 
-        rideRequestRepository.save(rideRequest);
-        return RideRequestDto.fromEntity(rideRequest);
+            User driver = userRepository
+                    .findById(driverId)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found: " + driverId));
+
+            User customer = rideRequest.getCustomer();
+
+            if (username.equals(driver.getUsername()) || username.equals(customer.getUsername())) {
+                driver.setHasSentOffer(false);
+                driver.setTotalRides(driver.getTotalRides() +1);
+                customer.setTotalRides(customer.getTotalRides() +1);
+                rideRequest.setStatus(RideStatus.COMPLETED);
+                rideRequest.setCompletedAt(Instant.now());
+
+                //Profile Rating
+                if (!rideRequest.getCustomerRating().isNaN()) {
+                    driver.setRating((driver.getRating()*(driver.getTotalRides()-1) + rideRequest.getCustomerRating())/driver.getTotalRides());
+                }
+
+                if (!rideRequest.getDriverRating().isNaN()) {
+                    customer.setRating((customer.getRating()*(customer.getTotalRides()-1) + rideRequest.getDriverRating())/customer.getTotalRides());
+                }
+
+                Ride ride = getRide(rideRequest, driver, customer);
+
+                rideRepository.save(ride);
+                userRepository.save(driver);
+                userRepository.save(customer);
+                rideRequestRepository.save(rideRequest);
+                return RideRequestDto.fromEntity(rideRequest);
+            }
+            else {
+                throw new PermissionDeniedDataAccessException(username + " not matching ride customer/driver", null);
+            }
+        }
+        else {
+            return RideRequestDto.fromEntity(rideRequest); //Nothing happens
+        }
+    }
+
+    private static Ride getRide(RideRequest rideRequest, User driver, User customer) {
+        Ride ride = new Ride();
+        ride.setCarClass(rideRequest.getRequestedCarClass());
+        ride.setDriver(driver);
+        ride.setDriverRating(driver.getRating());
+        ride.setCustomerRating(customer.getRating());
+        ride.setTotalDistance(rideRequest.getTotalDistance());
+        ride.setPrice(rideRequest.getPrice());
+        ride.setTotalDuration(rideRequest.getTotalTime());
+        ride.setDestinationAddress(rideRequest.getDestinationAddress());
+        ride.setDestinationLatitude(rideRequest.getDestinationLatitude());
+        ride.setDestinationLongitude(rideRequest.getDestinationLongitude());
+        ride.setEndTime(LocalDateTime.now());
+        ride.setStartAddress(rideRequest.getStartAddress());
+        ride.setStartLatitude(rideRequest.getStartLatitude());
+        ride.setStartLongitude(rideRequest.getStartLongitude());
+        ride.setUpdatedAt(rideRequest.getUpdatedAt());
+        ride.setRideRequest(rideRequest);
+        ride.setStatus(RideStatus.COMPLETED);
+        return ride;
     }
 
     /**

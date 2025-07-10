@@ -1,5 +1,11 @@
 import { CarClass } from './enums.model';
 
+export interface StopLocationDto {
+  latitude: number;
+  longitude: number;
+  address?: string;
+}
+
 export interface CreateRideRequestDto {
   startLatitude?: number;
   startLongitude?: number;
@@ -11,4 +17,5 @@ export interface CreateRideRequestDto {
   totalDistance?: number;
   totalTime?: number;
   price?: number;
+  stops?: StopLocationDto[];
 }

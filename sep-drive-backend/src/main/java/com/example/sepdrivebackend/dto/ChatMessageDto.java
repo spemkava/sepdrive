@@ -1,5 +1,6 @@
 package com.example.sepdrivebackend.dto;
 
+import com.example.sepdrivebackend.model.ChatMessage;
 import com.example.sepdrivebackend.model.MessageStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,7 +38,7 @@ public class ChatMessageDto {
     /**
      * Factory-Methode zum Erstellen eines DTOs aus einer Entity
      */
-    public static ChatMessageDto fromEntity(com.example.sepdrivebackend.model.ChatMessage message) {
+    public static ChatMessageDto fromEntity(ChatMessage message) {
         ChatMessageDto dto = new ChatMessageDto();
         dto.setId(message.getId());
         dto.setChatId(message.getChatId());

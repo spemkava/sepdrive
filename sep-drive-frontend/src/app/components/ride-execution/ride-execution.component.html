@@ -4,19 +4,129 @@
   <div class="main-layout">
 
     <!-- Karten-Container -->
-    <div class="map-container">
-      <div id="map"></div>
-    </div>
+    <app-MapVisualizer
+      [rideId]="rideId"
+      [startCoords$]="startCoords$"
+      [destinationCoords$]="destinationCoords$"
+      [stops$]="stops$"
+      (simulationRunning)="isRunning = $event"
+      (simulationDone)="simulationFinished = $event"
+    ></app-MapVisualizer>
 
     <!-- Seitenleiste für Steuerung und Chat -->
     <div class="sidebar">
       <h2>Fahrt-Simulation</h2>
 
+        <!-- Modal für Route bearbeiten -->
+        <div class="modal-overlay" *ngIf="isPauseModalVisible">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Route anpassen</h3>
+                    <button class="close-btn" (click)="closePauseModal()" title="Schließen">✖</button>
+                </div>
+
+                <div class="modal-content">
+                    <!-- Neues Ziel Section -->
+                    <div class="form-section">
+                        <h4><i class="icon-target"></i> Neues Ziel</h4>
+
+                        <div class="mode-selection">
+                            <label class="radio-label">
+                                <input type="radio" name="destMode" value="Coordinates" [(ngModel)]="destinationMode">
+                                <span>Koordinaten</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="destMode" value="Address" [(ngModel)]="destinationMode">
+                                <span>Adresse</span>
+                            </label>
+                        </div>
+
+                        <div *ngIf="updatedDestination" class="input-section">
+                            <div *ngIf="destinationMode === 'Coordinates'" class="coordinate-inputs">
+                                <div class="input-group">
+                                    <label>Breitengrad</label>
+                                    <input type="number" [(ngModel)]="updatedDestination.lat" placeholder="z.B. 51.5074" step="0.000001">
+                                </div>
+                                <div class="input-group">
+                                    <label>Längengrad</label>
+                                    <input type="number" [(ngModel)]="updatedDestination.lon" placeholder="z.B. -0.1278" step="0.000001">
+                                </div>
+                            </div>
+
+                            <div *ngIf="destinationMode === 'Address'" class="address-search">
+                                <div class="input-group">
+                                    <label>Adresse suchen</label>
+                                    <input type="text" [(ngModel)]="destinationSearchQuery" (input)="searchDestinationAddress()" placeholder="Straße, Stadt...">
+                                </div>
+                                <ul class="search-results" *ngIf="destinationSearchResults.length > 0">
+                                    <li *ngFor="let result of destinationSearchResults" (click)="chooseDestinationAddress(result)">
+                                        <i class="icon-location"></i>
+                                        {{ result.label }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wegpunkte Section -->
+                    <div class="form-section">
+                        <h4><i class="icon-route"></i> Wegpunkte</h4>
+
+                        <div class="waypoints-container">
+                            <div *ngFor="let wp of updatedStops; let i = index" class="waypoint-item">
+                                <div class="waypoint-header">
+                                    <span class="waypoint-number">{{ i + 1 }}</span>
+                                    <div class="waypoint-mode-selection">
+                                        <label class="radio-label-small">
+                                            <input type="radio" [name]="'wpMode' + i" [value]="'Coordinates'" [(ngModel)]="wp.inputMode">
+                                            <span>Koordinaten</span>
+                                        </label>
+                                        <label class="radio-label-small">
+                                            <input type="radio" [name]="'wpMode' + i" [value]="'Address'" [(ngModel)]="wp.inputMode">
+                                            <span>Adresse</span>
+                                        </label>
+                                    </div>
+                                    <button class="remove-btn" (click)="removeWaypoint(i)" title="Wegpunkt entfernen">✖</button>
+                                </div>
+
+                                <div class="waypoint-inputs">
+                                    <div *ngIf="wp.inputMode === 'Coordinates'" class="coordinate-inputs">
+                                        <input type="number" [(ngModel)]="updatedStops[i].lat" placeholder="Breitengrad" step="0.000001">
+                                        <input type="number" [(ngModel)]="updatedStops[i].lon" placeholder="Längengrad" step="0.000001">
+                                    </div>
+
+                                    <div *ngIf="wp.inputMode === 'Address'" class="address-search waypoint-address-search">
+                                        <input type="text" [(ngModel)]="wp.searchQuery" (input)="searchWaypointAddress(i)" placeholder="Adresse suchen...">
+                                        <ul class="search-results" *ngIf="wp.searchResults && wp.searchResults.length > 0">
+                                            <li *ngFor="let result of wp.searchResults" (click)="chooseWaypointAddress(i, result)">
+                                                <i class="icon-location"></i>
+                                                {{ result.label }}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="add-waypoint-btn" (click)="addWaypoint()">
+                            <i class="icon-plus"></i>
+                            Wegpunkt hinzufügen
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" (click)="closePauseModal()">Abbrechen</button>
+                    <button class="btn btn-primary" (click)="updateRoute()">Route aktualisieren</button>
+                </div>
+            </div>
+        </div>
+
+
       <!-- Steuerungselemente -->
       <div class="controls">
         <button (click)="startSimulation()" [disabled]="isRunning || simulationFinished">Start</button>
-        <button (click)="pauseSimulation()" [disabled]="!isRunning">Pause</button>
-      </div>
+        <button (click)="pauseSimulation(); openPauseModal()" [disabled]="!isRunning">Pause</button>      </div>
 
       <div class="slider-control">
         <label>
@@ -46,7 +156,7 @@
 
   </div>
 
-</div>
+
 
 <!-- Template, das angezeigt wird, wenn keine aktive Anfrage gefunden wird -->
 <ng-template #noRequest>

@@ -42,7 +42,7 @@ export class DrivingHistoryComponent implements OnInit {
 
   searchTerm: string = ''
 
-  filteredHistory= this.drivingHistory
+  filteredHistory = this.drivingHistory
 
   ngOnInit() {
     this.loadHistory();
@@ -62,7 +62,7 @@ export class DrivingHistoryComponent implements OnInit {
               this.userService.getUserProfile(driverUsername).subscribe(driver => {
                 tempHistory.push({
                   id: request.id,
-                  completedAt: '',
+                  completedAt: request.completedAt,
                   totalDistance: request.totalDistance,
                   totalTime: request.totalTime,
                   price: request.price,
@@ -158,7 +158,11 @@ export class DrivingHistoryComponent implements OnInit {
     }
     this.filteredHistory = this.drivingHistory.filter( ride => {
       return ride.customerUsername.toLowerCase().startsWith(term) ||
-        ride.driverUsername.toLowerCase().startsWith(term)
+        ride.customerFirstName.toLowerCase().startsWith(term) ||
+        ride.customerLastName.toLowerCase().startsWith(term) ||
+        ride.driverUsername.toLowerCase().startsWith(term) ||
+        ride.driverFirstName.toLowerCase().startsWith(term) ||
+        ride.driverLastName.toLowerCase().startsWith(term)
     })
   }
 }

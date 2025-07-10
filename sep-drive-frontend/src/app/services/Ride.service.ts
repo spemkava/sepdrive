@@ -84,4 +84,37 @@ export class RideService {
       })
     );
   }
+  // Weitere Methoden je nach Bedarf: Fahrt beenden, neue Fahrt anlegen (selten direkt), etc.
+ //TODO: Implementiere die updateRoute-Methode
+
+  updateRoute(body: {
+    rideId: number;
+    newDestinationLat: number | null;
+    newDestinationLon: number | null;
+    waypoints: { lat: number; lon: number }[];
+    currentLat: number;
+    currentLon: number;
+  }): Observable<{
+    geoJson: string;
+    distance: number;
+    duration: number;
+    price: number;
+  }> {
+    return this.http.post<{
+      geoJson: string;
+      distance: number;
+      duration: number;
+      price: number;
+    }>(`http://localhost:8080/api/route/rides/${body.rideId}/update-route`, body).pipe(
+      catchError(err => {
+        console.error('updateRoute fehlgeschlagen', err);
+        return of({
+          geoJson: '',
+          distance: 0,
+          duration: 0,
+          price: 0
+        });
+      })
+    );
+  }
 }

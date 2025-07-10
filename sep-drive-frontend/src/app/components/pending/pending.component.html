@@ -2,11 +2,11 @@
 <div class="coordinate-form">
   <label>
     Fahrer Latitude:
-    <input type="number" [(ngModel)]="driverLat" placeholder="z.B. 52.52" />
+    <input type="number" [(ngModel)]="driverLat" placeholder="z.B. 52.52"/>
   </label>
   <label>
     Fahrer Longitude:
-    <input type="number" [(ngModel)]="driverLng" placeholder="z.B. 13.405" />
+    <input type="number" [(ngModel)]="driverLng" placeholder="z.B. 13.405"/>
   </label>
   <button mat-raised-button color="primary" (click)="updateDistances()">Entfernungen berechnen</button>
 </div>
@@ -15,7 +15,7 @@
   <input type="text"
          [(ngModel)]="addressQuery"
          placeholder="Adresse eingeben"
-         autocomplete="off" />
+         autocomplete="off"/>
 
   <button (click)="searchAddress()" [disabled]="!addressQuery || addressQuery.length < 3">
     Adresse/POI suchen
@@ -57,7 +57,7 @@
   <ng-container matColumnDef="rating">
     <th mat-header-cell *matHeaderCellDef>Bewertung</th>
     <td mat-cell *matCellDef="let req">
-      {{ req.customerRating ? (req.customerRating | number:'1.1-1') + ' ★' : '–' }}
+      {{ req.customerRating != null ? (req.customerProfileRating | number:'1.1-1') + ' ★' : '–' }}
     </td>
   </ng-container>
 

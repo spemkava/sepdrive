@@ -232,5 +232,9 @@ public class UserService implements UserDetailsService {
         user.setProfileImageContentType(null);
         userRepository.save(user);
     }
+
+    public List<User> getDrivers() {
+        return userRepository.findByRole("DRIVER");
+    }
     
 }

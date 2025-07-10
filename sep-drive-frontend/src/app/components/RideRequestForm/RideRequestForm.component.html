@@ -73,6 +73,8 @@
           </div>
         </div>
 
+
+
         <div>
           <p>Zielort</p>
 
@@ -141,6 +143,54 @@
           </div>
         </div>
 
+        <div style="margin-top: 2rem;">
+          <p>Zwischenstopp hinzufügen</p>
+
+          <input [(ngModel)]="newStopMode" type="radio" id="StopCoordinates" name="stopMode" value="Coordinates" checked>
+          <label for="StopCoordinates">Koordinaten</label>
+          <input [(ngModel)]="newStopMode" type="radio" id="StopAddress" name="stopMode" value="Address">
+          <label for="StopAddress">Adresse</label>
+          <input [(ngModel)]="newStopMode" type="radio" id="StopPOI" name="stopMode" value="POI">
+          <label for="StopPOI">POI</label>
+          <input [(ngModel)]="newStopMode" type="radio" id="StopGeo" name="stopMode" value="Geolocation">
+          <label for="StopGeo">Aktueller Standort</label>
+
+          <!-- Koordinaten -->
+          <div *ngIf="newStopMode === 'Coordinates'">
+            <input [(ngModel)]="newStopLat" type="number" placeholder="Breitengrad">
+            <input [(ngModel)]="newStopLon" type="number" placeholder="Längengrad">
+          </div>
+
+          <!-- Adresse -->
+          <div *ngIf="newStopMode === 'Address'">
+            <input [(ngModel)]="newStopAddressQuery" type="text" placeholder="Adresse" (keyup.enter)="searchStopAddress()">
+            <button type="button" (click)="searchStopAddress()">🔎 Suchen</button>
+            <ul *ngIf="newStopAddressResults.length">
+              <li *ngFor="let res of newStopAddressResults">
+                {{ res.label }} <button type="button" (click)="chooseStopAddress(res)">Auswählen</button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- POI -->
+          <div *ngIf="newStopMode === 'POI'">
+            <input type="text" [(ngModel)]="poiSearchStop" placeholder="Suchen...">
+            <select (change)="chooseStopPOI($event)">
+              <option *ngFor="let poi of loadedPOIs | poiFilter: poiSearchStop" [value]="poi.id">
+                {{ poi.tags?.name || 'Unbenannter Ort' }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Geolocation -->
+          <div *ngIf="newStopMode === 'Geolocation'">
+            <button type="button" (click)="useGeolocationForStop()">📍 Standort übernehmen</button>
+          </div>
+
+          <br>
+          <button type="button" (click)="confirmAddStop()">➕ Zwischenstopp hinzufügen</button>
+        </div>
+
         <p>Fahrzeugklasse</p>
         <div *ngFor="let c of carClasses">
           <input [(ngModel)]="carClass"
@@ -165,6 +215,17 @@
       <button type="button" (click)="updatePreview()">Vorschau</button>
       <button type="submit" [disabled]="!requestForm.form.valid"> Submit</button>
 
+      <div *ngIf="ride.stops?.length" style="margin-top: 1rem;">
+        <h4>Zwischenstopps</h4>
+        <ul style="padding-left: 1rem;">
+          <li *ngFor="let stop of ride.stops; index as i">
+            <strong>Stopp {{ i + 1 }}:</strong>
+            {{ stop.latitude }}, {{ stop.longitude }}
+            <span *ngIf="stop.address">({{ stop.address }})</span>
+            <button type="button" (click)="removeStop(i)">  ❌  </button>
+          </li>
+        </ul>
+      </div>
     </form>
   </div>
   <h3 *ngIf="totalDistance"> Distanz: {{totalDistance}}km</h3>
@@ -176,6 +237,8 @@
     (poisChanged)="onPOIsChanged($event)"
     (totalDistanceChanged)="totalDistanceChanged($event)"
     (totalTimeChanged)="totalTimeChanged($event)"
-    [poiTypes]="selectedPOITypes">
+    [poiTypes]="selectedPOITypes"
+    [stops$]="stops$">
+
   </app-MapVisualizer>
 </div>

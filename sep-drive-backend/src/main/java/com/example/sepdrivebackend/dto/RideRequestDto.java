@@ -31,9 +31,11 @@ public class RideRequestDto {
     private RideStatus status;
     private List<OfferDto> offers;
     private Instant createdAt; // Sende Instant als ISO-String
+    private Double CustomerProfileRating;
     private Double customerRating;
     private Double driverRating;
-    private Date completedAt;
+    private Instant completedAt;
+    private List<StopLocationDto> stops;
 
     // Statische Methode, um ein DTO aus einem Entity zu erstellen
     public static RideRequestDto fromEntity(RideRequest rideRequest) {
@@ -67,9 +69,24 @@ public class RideRequestDto {
         dto.setPrice(rideRequest.getPrice());
         dto.setStatus(rideRequest.getStatus());
         dto.setCreatedAt(rideRequest.getCreatedAt());
-        dto.setCustomerRating(rideRequest.getCustomer().getRating());
+        dto.setCustomerProfileRating(rideRequest.getCustomer().getRating());
+        dto.setCustomerRating(rideRequest.getCustomerRating());
         dto.setDriverRating(rideRequest.getDriverRating());
         dto.setCompletedAt(rideRequest.getCompletedAt());
+
+        dto.setStops(
+                rideRequest.getStops() != null
+                        ? rideRequest.getStops().stream()
+                        .map(stop -> new StopLocationDto(
+                                stop.getLatitude(),
+                                stop.getLongitude(),
+                                stop.getAddress()))
+                        .collect(Collectors.toList())
+                        : null
+        );
+
+
+
         return dto;
     }
 }

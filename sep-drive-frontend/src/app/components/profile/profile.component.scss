@@ -1,56 +1,105 @@
-.profile-header {
+:host {
+  display: block;
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #2c3e50;
+}
+
+.profile-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  .profile-pic {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 2px solid #ccc;
-  }
-  .upload-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    .error {
-      color: red;
-      font-size: 0.9em;
-    }
-  }
-}
-.error {
-  color: red;
-  margin-top: 1rem;
-}
-.upload-btn {
-  display: inline-block;
-  padding: 0.5em 1em;
-  background-color: #007bff;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  user-select: none;
-
-  &:hover { background-color: #0056b3; }
+  padding: 2rem;
 }
 
-.remove-btn {
-  display: inline-block;
-  padding: 0.5em 1em;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  user-select: none;
-
-  &:hover { background-color: #a71d2a; }
+.profile-pic {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ddd;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profile-actions {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.upload-btn {
+  background-color: #007bff;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  transition: background-color 0.3s ease;
+  text-align: center;
+}
+
+
+.upload-btn:hover {
+  background-color: #2980b9;
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+p {
+  font-size: 1rem;
+  margin: 0.3rem 0;
+  line-height: 1.4;
+
+  strong {
+    font-weight: 600;
+    color: #555;
+  }
+}
+
+.alert {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.alert-danger {
+  background-color: #fdecea;
+  color: #c0392b;
+  border: 1px solid #e74c3c;
+}
+
+@media (max-width: 600px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .profile-actions {
+    align-items: center;
+  }
+
+  .upload-btn {
+    width: 100%;
+    text-align: center;
+  }
 }

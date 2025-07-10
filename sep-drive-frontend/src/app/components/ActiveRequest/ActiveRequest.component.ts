@@ -6,6 +6,7 @@ import { catchError, switchMap, startWith, tap } from 'rxjs/operators'; // RxJS 
 import { RideRequestService } from '../../services/RideRequest.service' ;  // Import RideRequestService
 import { RideRequestDto } from '../../models/ride-request-dto.model'; // Import RideRequestDto
 import {MapVisualizerComponent} from '../MapVisualizer/MapVisualizer.component';
+import {LatLngExpression} from 'leaflet';
 
 @Component({
   selector: 'app-active-request',
@@ -26,7 +27,8 @@ export class ActiveRequestComponent implements OnInit {
   startCoords$ = this._startCoords$.asObservable();
   private _destinationCoords$ = new BehaviorSubject<[number, number] | undefined>(undefined);
   destinationCoords$ = this._destinationCoords$.asObservable();
-
+  private stopsSubject = new BehaviorSubject<LatLngExpression[]>([]);
+  public stops$ = this.stopsSubject.asObservable();
   // Observable, das die aktive Anfrage (oder null) hält
   activeRequest$!: Observable<RideRequestDto | null>;
   errorMessage: string | null = null;
@@ -56,6 +58,13 @@ export class ActiveRequestComponent implements OnInit {
         if(data) {
           this._startCoords$.next([data.startLatitude, data.startLongitude]);
           this._destinationCoords$.next([data.destinationLatitude, data.destinationLongitude]);
+
+          if (data.stops && Array.isArray(data.stops)) {
+            const stops: LatLngExpression[] = data.stops.map(s => [s.latitude, s.longitude]);
+            this.stopsSubject.next(stops);
+          } else {
+            this.stopsSubject.next([]);
+          }
         }
       }),
       catchError(err => { // Fehlerbehandlung für den Ladevorgang

@@ -1,0 +1,135 @@
+<div class="chat-container">
+  <!-- Chat Header -->
+  <div class="chat-header">
+    <h4>Chat für Fahrt #{{ rideRequestId }}</h4>
+    <div class="connection-status" [class.connected]="isConnected">
+      <span class="status-indicator"></span>
+      {{ isConnected ? 'Verbunden' : 'Getrennt' }}
+    </div>
+  </div>
+
+  <!-- Debug Info -->
+  <div class="debug-info" *ngIf="showDebug">
+    <small>Ich: {{ currentUser?.username }} ({{ currentUser?.role }})</small><br>
+    <small>Andere Person: {{ otherUser?.username || 'Wird ermittelt...' }}</small><br>
+    <small>Nachrichten: {{ messages.length }}</small>
+    <button (click)="loadChatHistory()" class="debug-btn">🔄 Neu laden</button>
+    <label class="auto-refresh-toggle">
+      <input type="checkbox" [(ngModel)]="autoRefreshEnabled" (change)="toggleAutoRefresh()">
+      Auto-Update
+    </label>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <span>Chat wird geladen...</span>
+  </div>
+
+  <!-- Messages Container -->
+  <div class="messages-container" #messageContainer>
+    <div *ngIf="messages.length === 0 && !isLoading" class="no-messages">
+      <p>Noch keine Nachrichten. Schreibt euch eine Nachricht!</p>
+    </div>
+
+    <div *ngFor="let message of messages; trackBy: trackByMessageId"
+         class="message-wrapper"
+         [class.my-message]="isMyMessage(message)"
+         [class.other-message]="!isMyMessage(message)">
+
+      <div class="message" [class.deleted]="message.deleted">
+        <div class="message-header" *ngIf="isMyMessage(message) && !message.deleted && message.status !== 'READ'">
+          <div class="message-actions">
+            <button class="action-btn edit-btn" (click)="startEditMessage(message)" title="Bearbeiten">
+              ✏️
+            </button>
+            <button class="action-btn delete-btn" (click)="deleteMessage(message)" title="Löschen">
+              🗑️
+            </button>
+          </div>
+        </div>
+
+        <div class="message-content">
+          <strong>{{ getMessageSender(message) }}:</strong>
+
+          <!-- Normal message display -->
+          <span *ngIf="!message.deleted && editingMessageId !== message.id">
+                {{ message.content }}
+              </span>
+
+          <!-- Edit mode -->
+          <div *ngIf="!message.deleted && editingMessageId === message.id" class="edit-mode">
+                <textarea
+                  [(ngModel)]="editMessageContent"
+                  class="edit-textarea"
+                  rows="2"
+                  maxlength="2000">
+                </textarea>
+            <div class="edit-actions">
+              <button class="save-btn" (click)="saveEditMessage(message)">💾 Speichern</button>
+              <button class="cancel-btn" (click)="cancelEditMessage()">❌ Abbrechen</button>
+            </div>
+          </div>
+
+          <!-- Deleted message -->
+          <span *ngIf="message.deleted" class="deleted-message">
+                <em>Nachricht wurde gelöscht</em>
+              </span>
+
+          <span *ngIf="message.edited && !message.deleted" class="edited-indicator">
+                (bearbeitet)
+              </span>
+        </div>
+
+        <div class="message-meta">
+              <span class="timestamp">
+                {{ message.timestamp | date:'short' }}
+              </span>
+          <span *ngIf="isMyMessage(message)" class="message-status" [class]="message.status.toLowerCase()">
+                <span *ngIf="message.status === 'SENT'">✓</span>
+                <span *ngIf="message.status === 'DELIVERED'">✓✓</span>
+                <span *ngIf="message.status === 'READ'" class="read-status">✓✓</span>
+              </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Input -->
+  <div class="message-input-container">
+    <div class="input-wrapper">
+          <textarea
+            [(ngModel)]="newMessage"
+            (keydown)="onKeyPress($event)"
+            placeholder="Nachricht eingeben... (Enter zum Senden, Shift+Enter für neue Zeile)"
+            class="message-input"
+            rows="1"
+            maxlength="2000">
+          </textarea>
+
+      <button
+        (click)="sendMessage()"
+        [disabled]="!newMessage.trim() || !otherUser"
+        class="send-button"
+        [title]="!otherUser ? 'Empfänger wird ermittelt...' : 'Nachricht senden'"
+        type="button">
+        <span class="send-icon">➤</span>
+      </button>
+    </div>
+
+    <div class="input-info">
+          <span class="character-count">
+            {{ newMessage.length }}/2000
+          </span>
+      <span *ngIf="!otherUser" class="warning">
+            ⚠️ Empfänger wird ermittelt...
+          </span>
+    </div>
+  </div>
+
+  <!-- Error Display -->
+  <div *ngIf="errorMessage" class="error-message">
+    ❌ {{ errorMessage }}
+    <button (click)="errorMessage = ''" class="close-error">✕</button>
+  </div>
+</div>

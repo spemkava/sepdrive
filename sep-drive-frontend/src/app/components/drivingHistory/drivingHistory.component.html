@@ -1,7 +1,7 @@
 <h2>Fahrthistorie</h2>
 <title>Fahrthistorie</title>
 
-<input type="text" placeholder="Suche einen Nutzernamen" [(ngModel)]="searchTerm" (input)="applyFilters()" />
+<input id="search-bar" type="text" placeholder="Suche einen Nutzernamen" [(ngModel)]="searchTerm" (input)="applyFilters()" />
 
 <table id="drivingHistory-table" class="display" style="width:100%">
   <thead>
@@ -22,7 +22,7 @@
   <tbody>
   <tr *ngFor="let ride of filteredHistory">
     <td style="text-align: center">{{ ride.id }}</td>
-    <td style="text-align: center">{{ ride.completedAt }}</td>
+    <td style="text-align: center">{{ ride.completedAt | date:'dd.MM.yyyy HH:mm' }}</td>
     <td style="text-align: center">{{ ride.totalDistance }}</td>
     <td style="text-align: center">{{ ride.totalTime + ' Min'}}</td>
     <td style="text-align: center">{{ ride.price + ' €' }}</td>

@@ -19,13 +19,13 @@
     <tbody>
     <tr *ngFor="let offer of request.offers">
       <td>Fahrt von: {{request.startLatitude}}, {{request.startLongitude}} nach:{{request.destinationLatitude}}, {{request.destinationLongitude}}</td>
-      <td>>Name: <a href="profile/{{offer.driverName}}">{{offer.driverName}}</a></td>
+      <td>Name: <a href="profile/{{offer.driverName}}">{{offer.driverName}}</a></td>
       <td>Rating: {{offer.driverRating}}</td>
       <td>Fahrten: {{offer.driverTotalRides}}</td>
       <!--TODO: Gefahrene Strecke im UserProfile hinterlegen-->
       <!-- <td>Gefahrene Strecke: {{offer.driverTotalDistance}}</td> -->
-      <td><button type="button" (click)="acceptOffer(offer.id)">Annehmen</button></td>
-      <td><button type="button" (click)="rejectOffer(offer.id)">Ablehnen</button></td>
+      <td><button id="accept" type="button" (click)="acceptOffer(offer.id)">Annehmen</button></td>
+      <td><button id="decline" type="button" (click)="rejectOffer(offer.id)">Ablehnen</button></td>
     </tr>
     </tbody>
   </table>

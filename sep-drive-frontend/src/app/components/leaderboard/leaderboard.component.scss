@@ -21,20 +21,20 @@
   outline: none;
 }
 
-#drivingHistory-table {
+#leaderboard-table {
   width: 100%;
   border-collapse: collapse;
   margin: 0 auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-#drivingHistory-table th,
-#drivingHistory-table td {
+#leaderboard-table th,
+#leaderboard-table td {
   padding: 1rem;
   text-align: center;
 }
 
-#drivingHistory-table th {
+#leaderboard-table th {
   background-color: #3498db;
   color: white;
   font-weight: 600;
@@ -42,12 +42,17 @@
   user-select: none;
 }
 
-#drivingHistory-table tr:nth-child(even) {
+#leaderboard-table tr:nth-child(even) {
   background-color: #f2f2f2;
 }
 
-#drivingHistory-table tr:hover {
+#leaderboard-table tr:hover {
   background-color: #e6f7ff;
+}
+
+.highlight-own-row {
+  background-color: #d1f5d3 !important;
+  font-weight: bold;
 }
 
 a {
@@ -61,7 +66,7 @@ a:hover {
 }
 
 @media (max-width: 768px) {
-  #drivingHistory-table {
+  #leaderboard-table {
     font-size: 0.9rem;
   }
 

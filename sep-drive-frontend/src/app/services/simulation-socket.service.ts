@@ -1,38 +1,127 @@
 import { Injectable } from '@angular/core';
-import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { Observable } from 'rxjs';
-
-export interface SimulationProgress {
-  rideId: number;
-  currentIndex: number;
-  lat: number;
-  lon: number;
-  isFinished: boolean;
-}
+import { Client, IMessage, Stomp } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import {BehaviorSubject, filter, Observable, Subject} from 'rxjs';
+import { SimulationProgress } from '../models/simulation-progress.model';
+import { RouteUpdate } from '../models/route-update.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SimulationSocketService {
-  private socket$: WebSocketSubject<SimulationProgress>;
+  private stompClient: Client;
+  private progressSubject = new BehaviorSubject<SimulationProgress | null>(null);
+  private routeUpdateSubject = new Subject<RouteUpdate>();
+  private isConnected = false;
+  private pendingSubscriptions: Array<() => void> = [];
 
   constructor() {
-    // URL an dein Backend anpassen (z.B. ws://localhost:8080/ws/simulation)
-    this.socket$ = webSocket<SimulationProgress>('ws://localhost:8080/ws/simulation');
+    this.stompClient = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws'), // <- passt zu Spring Boot WebSocketConfig
+      reconnectDelay: 5000,
+      debug: str => console.log(str)
+    });
+
+    this.stompClient.onConnect = () => {
+      console.log('[✔] STOMP verbunden');
+      this.isConnected = true;
+      this.stompClient.subscribe('/topic/simulation-progress', (message: IMessage) => {
+        const progress: SimulationProgress = JSON.parse(message.body);
+        this.progressSubject.next(progress);
+      });
+
+      this.pendingSubscriptions.forEach(subscription => subscription());
+      this.pendingSubscriptions = [];
+};
+
+    this.stompClient.onStompError = (frame) => {
+      console.error('[❌] STOMP Fehler', frame);
+      this.isConnected = false;
+    };
+
+    this.stompClient.activate(); // Verbindung aufbauen
   }
 
-  // Fortschritts-Update an Server senden
   sendProgress(progress: SimulationProgress): void {
-    this.socket$.next(progress);
-  }
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.warn('❌ STOMP-Verbindung nicht aktiv – Progress nicht gesendet');
+      return;
+    }
 
-  // Updates vom Server empfangen (z.B. für Kundenansicht)
+    this.stompClient.publish({
+      destination: `/app/simulation/progress`,
+      body: JSON.stringify(progress)
+    });
+  }
   onProgress(): Observable<SimulationProgress> {
-    return this.socket$.asObservable();
+    return this.progressSubject.asObservable().pipe(
+      filter((val): val is SimulationProgress => val !== null)
+    );
   }
 
-  // Optional: Verbindung schließen
-  close(): void {
-    this.socket$.complete();
+  sendRouteUpdate(update: RouteUpdate): void {
+    if (!this.isConnected) {
+      console.warn('❌ STOMP-Verbindung nicht aktiv – Route-Update nicht gesendet');
+      return;
+    }
+    console.log('Sende Route-Update:', update);
+    this.stompClient.publish({
+      destination: `/app/simulation/route-update`,
+      body: JSON.stringify(update)
+    });
   }
+
+  subscribeToGlobalRouteUpdates(): void {
+    const subscribeFunction = () => {
+      const topic = `/topic/route-update/global`;
+      console.log(`Abonniere globales Topic: ${topic}`);
+
+      this.stompClient.subscribe(topic, (message: IMessage) => {
+        const update: RouteUpdate = JSON.parse(message.body);
+        console.log('Globales Route-Update empfangen:', update);
+        this.routeUpdateSubject.next(update);
+      });
+    };
+
+    if (this.isConnected) {
+      subscribeFunction();
+    } else {
+      this.pendingSubscriptions.push(subscribeFunction);
+    }
+  }
+
+  subscribeToRouteUpdates(rideId: number): void {
+    const subscribeFunction = () => {
+      const topic = `/topic/route-update/${rideId}`;
+      console.log(`Abonniere Topic: ${topic}`);
+
+      this.stompClient.subscribe(topic, (message: IMessage) => {
+        const update: RouteUpdate = JSON.parse(message.body);
+        console.log('Route-Update empfangen:', update);
+        this.routeUpdateSubject.next(update);
+      });
+    };
+
+    if (this.isConnected) {
+      subscribeFunction();
+    } else {
+      // Wenn nicht verbunden, Abonnement in Warteschlange einreihen
+      this.pendingSubscriptions.push(subscribeFunction);
+    }
+  }
+
+  onRouteUpdate(): Observable<RouteUpdate> {
+    return this.routeUpdateSubject.asObservable();
+  }
+
+  isConnectedtoServer(): boolean {
+    return this.isConnected
+  }
+
+  disconnect(): void {
+    if (this.stompClient) {
+      this.stompClient.deactivate();
+    }
+  }
+
 }
